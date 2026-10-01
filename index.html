@@ -125,7 +125,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.85rem 0.5rem;
+      padding: 0.75rem 0.5rem;
       border-bottom: 1px solid #f3f4f6;
       gap: 0.6rem;
       background: #fff;
@@ -148,27 +148,33 @@
       z-index: 40;
     }
 
-    .item-left { 
-      display: flex; 
-      align-items: center; 
-      gap: 0.65rem; 
-      flex: 1; 
-      cursor: pointer; 
-      min-width: 0; 
+    /* Checkbox specifieke tap-zone */
+    .checkbox-btn {
+      background: transparent;
+      border: none;
+      padding: 0.35rem 0.5rem 0.35rem 0.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
     }
-    .item-left input[type="checkbox"] { 
-      width: 1.35rem; 
-      height: 1.35rem; 
-      cursor: pointer; 
-      border-radius: 6px; 
-      flex-shrink: 0; 
-      pointer-events: none;
+    .checkbox-btn input[type="checkbox"] {
+      width: 1.35rem;
+      height: 1.35rem;
+      cursor: pointer;
+      border-radius: 6px;
+      pointer-events: none; /* Kliks vangen we af via de checkbox-btn wrapper */
     }
-    .item-name-group { 
+
+    /* De rest van de regel (drag & scroll zone) */
+    .item-content { 
       display: flex; 
       align-items: center; 
       gap: 0.45rem; 
-      overflow: hidden; 
+      flex: 1; 
+      min-width: 0; 
       flex-wrap: wrap; 
     }
     .item-name { 
@@ -542,7 +548,6 @@
           </div>
         `;
 
-        // Telt het aantal unieke producten dat nog gehaald moet worden
         const itemsRef = collection(db, "lists", listId, "items");
         onSnapshot(itemsRef, (itemSnap) => {
           let openProducts = 0;
@@ -670,7 +675,7 @@
     });
   }
 
-  // --- RENDEREN & DUAL DRAG-AND-DROP (TOUCH + DESKTOP) ---
+  // --- RENDEREN & DRAG-AND-DROP ---
   let isDraggingActive = false;
   let draggedElement = null;
 
@@ -693,18 +698,17 @@
       li.dataset.id = item.id;
       li.dataset.completed = item.completed ? "true" : "false";
 
-      // HTML5 Drag & Drop voor desktop (alleen actieve items verslepen)
       if (!item.completed) {
         li.draggable = true;
       }
 
       li.innerHTML = `
-        <div class="item-left">
+        <button class="checkbox-btn" title="${item.completed ? 'Weer toevoegen' : 'Afvinken'}">
           <input type="checkbox" ${item.completed ? "checked" : ""}>
-          <div class="item-name-group">
-            <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
-            ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
-          </div>
+        </button>
+        <div class="item-content">
+          <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
+          ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
         </div>
         <div class="item-actions">
           <button class="btn-action-small btn-item-edit" title="Bewerken">✏️</button>
@@ -712,20 +716,21 @@
         </div>
       `;
 
-      // Koppel Touch interactie (mobiel)
-      attachTouchInteractions(li, item);
-
-      // Koppel HTML5 Drag events (desktop)
-      attachDesktopDrag(li, item);
-
-      // Klikken om af te vinken (desktop klik)
-      li.querySelector(".item-left").addEventListener("click", (e) => {
-        if (isDraggingActive) return;
+      // 1. AFVINKEN GEBEURT EXCLUSIEF VIA DE CHECKBOX-KNOP
+      const chkBtn = li.querySelector(".checkbox-btn");
+      chkBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         const itemRef = doc(db, "lists", activeListId, "items", item.id);
         updateDoc(itemRef, { completed: !item.completed });
       });
 
-      // Hernoemen item & aantal via potloodje
+      // 2. LONG-PRESS DRAG VOOR MOBIEL (alleen op de rest van de rij, niet op knoppen)
+      attachTouchInteractions(li, item);
+
+      // 3. DESKTOP DRAG VOOR DE MUIS
+      attachDesktopDrag(li, item);
+
+      // 4. BEWERKEN VIA POTLOODJE
       li.querySelector(".btn-item-edit").addEventListener("click", (e) => {
         e.stopPropagation();
         openPromptModal("Product aanpassen", item.name, item.qty ?? 1, async (newName, newQty) => {
@@ -737,7 +742,7 @@
         });
       });
 
-      // Verwijderen item
+      // 5. VERWIJDEREN VIA KRUISJE
       li.querySelector(".btn-delete-item").addEventListener("click", (e) => {
         e.stopPropagation();
         const itemRef = doc(db, "lists", activeListId, "items", item.id);
@@ -750,16 +755,17 @@
     setupListDropZone(listEl);
   }
 
-  // --- MOBIELE TOUCH INTERACTIE (LONG PRESS) ---
+  // --- MOBIELE TOUCH INTERACTIE (MET HARDE SCROLL-PROTECTIE) ---
   function attachTouchInteractions(li, item) {
     let pressTimer = null;
     let isLongPress = false;
     let startY = 0;
     let startX = 0;
-    const PRESS_DURATION = 250;
+    const PRESS_DURATION = 260;
 
     li.addEventListener("touchstart", (e) => {
-      if (e.target.closest(".item-actions")) return;
+      // Negeer knopjes (zoals checkbox of bewerken)
+      if (e.target.closest(".item-actions") || e.target.closest(".checkbox-btn")) return;
 
       const touch = e.touches[0];
       startY = touch.clientY;
@@ -780,7 +786,11 @@
 
     li.addEventListener("touchmove", (e) => {
       const touch = e.touches[0];
-      if (!isLongPress && (Math.hypot(touch.clientX - startX, touch.clientY - startY) > 8)) {
+      const deltaX = Math.abs(touch.clientX - startX);
+      const deltaY = Math.abs(touch.clientY - startY);
+
+      // Zodra je vinger meer dan 6px verplaatst, is het een scrollbeweging en annuleren we de long-press
+      if (deltaX > 6 || deltaY > 6) {
         if (pressTimer) {
           clearTimeout(pressTimer);
           pressTimer = null;
@@ -789,6 +799,14 @@
     }, { passive: true });
 
     li.addEventListener("touchend", () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      // LET OP: Hier staat bewust GEEN toggle meer in! Afvinken kan alleen nog via de checkbox-knop.
+    });
+
+    li.addEventListener("touchcancel", () => {
       if (pressTimer) {
         clearTimeout(pressTimer);
         pressTimer = null;
@@ -835,7 +853,7 @@
     if (item.completed) return;
 
     li.addEventListener("dragstart", (e) => {
-      if (e.target.closest(".item-actions")) {
+      if (e.target.closest(".item-actions") || e.target.closest(".checkbox-btn")) {
         e.preventDefault();
         return;
       }
