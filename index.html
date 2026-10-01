@@ -456,9 +456,6 @@
     if (unsubscribeLists) unsubscribeLists();
     if (unsubscribeItems) unsubscribeItems();
     
-    // Leeg de hash zodat we echt schoon op slot gaan
-    window.location.hash = "";
-    
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
     authView.classList.remove("hidden");
@@ -466,60 +463,8 @@
 
   function unlockApp() {
     authView.classList.add("hidden");
+    dashboardView.classList.remove("hidden");
     startDashboardListener();
-    handleRoute(); // Bepaal de pagina via veilige hash
-  }
-
-  // --- 100% NATIVE HASH ROUTING (FIX VOOR ZWART SCHERM) ---
-  function handleRoute() {
-    const hash = window.location.hash;
-    
-    // Als er een #list-... in de adresbalk staat:
-    if (hash.startsWith("#list-")) {
-      const listId = hash.replace("#list-", "");
-      // Haal naam op uit sessie, anders standaard fallback
-      const listName = sessionStorage.getItem("listName-" + listId) || "Boodschappenlijst";
-      
-      activeListId = listId;
-      activeListName = listName;
-      document.getElementById("active-list-title").textContent = listName;
-
-      dashboardView.classList.add("hidden");
-      detailView.classList.remove("hidden");
-
-      listenToItems(listId);
-    } 
-    // Anders (leeg of onbekend), toon altijd het Dashboard
-    else {
-      if (unsubscribeItems) unsubscribeItems();
-      activeListId = null;
-      detailView.classList.add("hidden");
-      dashboardView.classList.remove("hidden");
-      
-      // Meteen eventuele zwevende pop-ups sluiten (veiligheid)
-      document.getElementById("confirm-modal").classList.add("hidden");
-      document.getElementById("prompt-modal").classList.add("hidden");
-      onConfirmCallback = null;
-      onPromptCallback = null;
-    }
-  }
-
-  // Android's fysieke back swipe verandert de Hash (URL). Wij luisteren ernaar.
-  window.addEventListener("hashchange", handleRoute);
-
-  // De visuele (<- Overzicht) knop in je app drukt feitelijk gewoon de browser "terug" in
-  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.hash = ""; // Fallback als de app vers was gestart met een open lijst
-    }
-  });
-
-  // Zo openen we nu veilig een lijstje, puur door de URL-hash te wijzigen
-  function openList(listId, listName) {
-    sessionStorage.setItem("listName-" + listId, listName);
-    window.location.hash = "list-" + listId;
   }
 
   // --- AUTOCOMPLETE PRODUCTEN (products.json) ---
@@ -602,7 +547,7 @@
             <span id="count-${listId}">Laden...</span>
           </div>
           <div class="card-actions">
-            <button class="btn-action-small btn-edit-card" title="Lijst hernoemen">✏️</button>
+            <button class="btn-action-small btn-edit-card" title="Lijst hernoemen">✏️️</button>
             <button class="btn-action-small btn-delete-card" title="Lijst verwijderen">&times;</button>
           </div>
         `;
@@ -625,7 +570,7 @@
           }
         });
 
-        // Bij klikken roepen we openList aan met de veilige hash-methode
+        // Bij klikken roepen we openList aan met de veilige history methode
         li.addEventListener("click", () => openList(listId, data.name));
 
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
@@ -667,6 +612,50 @@
     });
     input.value = "";
   });
+
+  // --- DETAIL: EEN GEOPENDE LIJST & HISTORY API ---
+  function openList(listId, listName) {
+    activeListId = listId;
+    activeListName = listName;
+    document.getElementById("active-list-title").textContent = listName;
+
+    dashboardView.classList.add("hidden");
+    detailView.classList.remove("hidden");
+
+    // We pushen een onzichtbare stap ZONDER de URL te wijzigen
+    history.pushState({ view: "detail" }, "");
+
+    listenToItems(listId);
+  }
+
+  function goBackToDashboard() {
+    if (unsubscribeItems) unsubscribeItems();
+    activeListId = null;
+    detailView.classList.add("hidden");
+    dashboardView.classList.remove("hidden");
+    
+    // Sluit direct zwevende modals af (veiligheid)
+    document.getElementById("confirm-modal").classList.add("hidden");
+    document.getElementById("prompt-modal").classList.add("hidden");
+    onConfirmCallback = null;
+    onPromptCallback = null;
+  }
+
+  // De visuele terug-knop (<- Overzicht) simuleert simpelweg een hardware back knop
+  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
+    history.back(); 
+  });
+
+  // DE MAGIE: Popstate vangt zowel de swipe als de knop netjes af
+  window.addEventListener("popstate", (e) => {
+    // Als de state leeg is (wat hij op het dashboard altijd is!), dan gaan we naar het dashboard
+    if (!e.state) {
+      if (!detailView.classList.contains("hidden")) {
+        goBackToDashboard();
+      }
+    }
+  });
+
 
   function listenToItems(listId) {
     if (unsubscribeItems) unsubscribeItems();
