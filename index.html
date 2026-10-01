@@ -40,8 +40,8 @@
     /* Invoervelden & formulieren */
     .input-wrapper { position: relative; width: 100%; }
     .input-row { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
-    input[type="text"], input[type="password"] { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid #d1d5db; border-radius: 12px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
-    input[type="text"]:focus, input[type="password"]:focus { border-color: #2563eb; }
+    input[type="text"], input[type="password"], input[type="number"] { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid #d1d5db; border-radius: 12px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus { border-color: #2563eb; }
     button.btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 12px; padding: 0.85rem 1.25rem; font-weight: 600; cursor: pointer; font-size: 1rem; white-space: nowrap; }
     button.btn-primary:active { background: #1d4ed8; }
 
@@ -120,39 +120,93 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.85rem 0.5rem;
+      padding: 0.75rem 0.4rem;
       border-bottom: 1px solid #f3f4f6;
-      gap: 0.5rem;
+      gap: 0.4rem;
       transition: opacity 0.2s;
     }
-    li.item-row.is-done { opacity: 0.6; }
-    .item-left { display: flex; align-items: center; gap: 0.75rem; flex: 1; cursor: pointer; user-select: none; }
-    .item-left input[type="checkbox"] { width: 1.3rem; height: 1.3rem; cursor: pointer; border-radius: 6px; }
-    .item-name { font-size: 1.05rem; color: #1f2937; word-break: break-word; }
+    li.item-row.is-done { opacity: 0.55; }
+    .item-left { display: flex; align-items: center; gap: 0.6rem; flex: 1; cursor: pointer; user-select: none; min-width: 0; }
+    .item-left input[type="checkbox"] { width: 1.3rem; height: 1.3rem; cursor: pointer; border-radius: 6px; flex-shrink: 0; }
+    .item-name-group { display: flex; align-items: center; gap: 0.35rem; overflow: hidden; }
+    .item-name { font-size: 1.02rem; color: #1f2937; word-break: break-word; }
     .done { text-decoration: line-through; color: #9ca3af; }
 
-    .item-actions { display: flex; align-items: center; gap: 0.25rem; }
+    /* Aantal stepper (- 1 +) */
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 0.15rem 0.25rem;
+      gap: 0.15rem;
+      flex-shrink: 0;
+    }
+    .qty-btn {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .qty-btn:active { background: #e5e7eb; }
+    .qty-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #2563eb;
+      min-width: 1.7rem;
+      text-align: center;
+    }
+    .is-done .qty-label { color: #9ca3af; }
+
+    .item-actions { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; }
     .btn-move {
       background: #f3f4f6;
       border: none;
       color: #6b7280;
-      width: 2rem;
-      height: 2rem;
+      width: 1.85rem;
+      height: 1.85rem;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
     }
     .btn-move:active { background: #e5e7eb; color: #111827; }
     .btn-move:disabled { opacity: 0.25; cursor: not-allowed; }
-    .btn-item-edit { color: #6b7280; font-size: 0.95rem; }
+    .btn-item-edit { color: #6b7280; font-size: 0.9rem; }
     .btn-item-edit:active { background: #e5e7eb; }
-    .btn-delete-item { color: #ef4444; font-size: 1.4rem; padding: 0.2rem 0.4rem; }
+    .btn-delete-item { color: #ef4444; font-size: 1.3rem; padding: 0.15rem 0.35rem; }
+
+    /* Statistiekenbalk onderaan */
+    .summary-card {
+      margin-top: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      text-align: center;
+    }
+    .summary-item { display: flex; flex-direction: column; gap: 0.15rem; }
+    .summary-label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
+    .summary-value { font-size: 1.15rem; font-weight: 700; color: #0f172a; }
+    .summary-value.to-buy { color: #2563eb; }
+    .summary-value.in-cart { color: #16a34a; }
 
     /* Footer */
-    .list-footer { margin-top: 1.5rem; text-align: center; }
+    .list-footer { margin-top: 1.25rem; text-align: center; }
     .btn-clear-all {
       background: #fee2e2;
       color: #b91c1c;
@@ -256,6 +310,19 @@
     <ul id="items-list"></ul>
     <div id="items-empty" class="empty-state hidden">Lijst is leeg! Voeg hierboven een product toe.</div>
 
+    <!-- STATISTIEKENBALK ONDERAAN -->
+    <div id="summary-container" class="summary-card hidden">
+      <div class="summary-item">
+        <span class="summary-label">Nog te halen</span>
+        <span id="summary-to-buy" class="summary-value to-buy">0</span>
+      </div>
+      <div style="width: 1px; height: 26px; background: #cbd5e1;"></div>
+      <div class="summary-item">
+        <span class="summary-label">In het mandje</span>
+        <span id="summary-in-cart" class="summary-value in-cart">0 🛒</span>
+      </div>
+    </div>
+
     <div class="list-footer">
       <button id="btn-open-clear-items" class="btn-clear-all" disabled>
         🗑️ Alle producten wissen
@@ -276,11 +343,18 @@
   </div>
 </div>
 
-<!-- Modal Pop-up voor Hernoemen (Prompt) -->
+<!-- Modal Pop-up voor Hernoemen / Aantal aanpassen -->
 <div id="prompt-modal" class="modal-overlay hidden">
   <div class="modal-box">
-    <h3 id="prompt-title">Hernoemen</h3>
-    <input type="text" id="prompt-input" style="margin-bottom: 1.25rem;" required>
+    <h3 id="prompt-title">Product aanpassen</h3>
+    <div style="text-align: left; margin-bottom: 0.5rem;">
+      <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Naam</label>
+      <input type="text" id="prompt-input" style="margin-top: 0.25rem; margin-bottom: 0.75rem;" required>
+    </div>
+    <div id="prompt-qty-wrapper" style="text-align: left; margin-bottom: 1.25rem;">
+      <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Aantal</label>
+      <input type="number" id="prompt-qty-input" min="1" max="99" style="margin-top: 0.25rem;">
+    </div>
     <div class="modal-actions">
       <button id="btn-prompt-cancel" class="modal-btn btn-cancel">Annuleren</button>
       <button id="btn-prompt-confirm" class="modal-btn btn-primary" style="padding: 0.75rem 1rem;">Opslaan</button>
@@ -326,7 +400,6 @@
   let currentItems = [];
   let unsubscribeLists = null;
   let unsubscribeItems = null;
-  const listCounts = {}; // Houdt openstaande items live bij
 
   // --- PINCODE LOGICA ---
   function checkStoredAuth() {
@@ -453,21 +526,24 @@
           </div>
         `;
 
-        // Live aantal openstaande items monitoren
+        // Live aantal openstaande stuks monitoren
         const itemsRef = collection(db, "lists", listId, "items");
         onSnapshot(itemsRef, (itemSnap) => {
-          let openCount = 0;
+          let openUnits = 0;
           itemSnap.forEach(d => {
-            if (!d.data().completed) openCount++;
+            const item = d.data();
+            if (!item.completed) {
+              openUnits += (item.qty ?? 1);
+            }
           });
           const countEl = document.getElementById(`count-${listId}`);
           if (countEl) {
             if (itemSnap.empty) {
               countEl.textContent = "Geen producten";
-            } else if (openCount === 0) {
+            } else if (openUnits === 0) {
               countEl.textContent = "Alles gehaald! 🎉";
             } else {
-              countEl.textContent = `${openCount} te halen`;
+              countEl.textContent = `${openUnits} te halen`;
             }
           }
         });
@@ -478,7 +554,7 @@
         // Hernoemen lijst
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
           e.stopPropagation();
-          openPromptModal("Lijstnaam aanpassen", data.name, async (newName) => {
+          openPromptModal("Lijstnaam aanpassen", data.name, null, async (newName) => {
             await updateDoc(doc(db, "lists", listId), { name: newName });
           });
         });
@@ -543,18 +619,37 @@
     const qItems = query(itemsCol, orderBy("order", "asc"));
     const clearBtn = document.getElementById("btn-open-clear-items");
     const itemsEmpty = document.getElementById("items-empty");
+    const summaryCard = document.getElementById("summary-container");
+    const summaryToBuy = document.getElementById("summary-to-buy");
+    const summaryInCart = document.getElementById("summary-in-cart");
 
     unsubscribeItems = onSnapshot(qItems, (snapshot) => {
       currentItems = [];
+      let totalToBuyUnits = 0;
+      let totalInCartUnits = 0;
+
       snapshot.forEach(docSnap => {
-        currentItems.push({ id: docSnap.id, ...docSnap.data() });
+        const it = { id: docSnap.id, ...docSnap.data() };
+        it.qty = it.qty ?? 1;
+        currentItems.push(it);
+
+        if (it.completed) {
+          totalInCartUnits += it.qty;
+        } else {
+          totalToBuyUnits += it.qty;
+        }
       });
 
       clearBtn.disabled = currentItems.length === 0;
+
       if (currentItems.length === 0) {
         itemsEmpty.classList.remove("hidden");
+        summaryCard.classList.add("hidden");
       } else {
         itemsEmpty.classList.add("hidden");
+        summaryCard.classList.remove("hidden");
+        summaryToBuy.textContent = totalToBuyUnits;
+        summaryInCart.textContent = `${totalInCartUnits} 🛒`;
       }
 
       renderItems();
@@ -565,7 +660,7 @@
     const listEl = document.getElementById("items-list");
     listEl.innerHTML = "";
 
-    // Sorteren: actieve items eerst (op volgorde), afgevinkte items automatisch onderaan
+    // Sorteren: actieve items eerst (op order), afgevinkte items onderaan
     const sorted = [...currentItems].sort((a, b) => {
       if (a.completed === b.completed) {
         return (a.order ?? 0) - (b.order ?? 0);
@@ -580,12 +675,19 @@
       li.innerHTML = `
         <div class="item-left">
           <input type="checkbox" ${item.completed ? "checked" : ""}>
-          <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
+          <div class="item-name-group">
+            <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
+          </div>
+        </div>
+        <div class="qty-stepper">
+          <button class="qty-btn btn-qty-minus" title="Minder">−</button>
+          <span class="qty-label">${item.qty ?? 1}x</span>
+          <button class="qty-btn btn-qty-plus" title="Meer">+</button>
         </div>
         <div class="item-actions">
           <button class="btn-move btn-up" ${index === 0 || item.completed ? "disabled" : ""} title="Omhoog">▲</button>
           <button class="btn-move btn-down" ${index === sorted.length - 1 || item.completed ? "disabled" : ""} title="Omlaag">▼</button>
-          <button class="btn-action-small btn-item-edit" title="Product hernoemen">✏️</button>
+          <button class="btn-action-small btn-item-edit" title="Bewerken">✏️</button>
           <button class="btn-action-small btn-delete-item" title="Verwijderen">&times;</button>
         </div>
       `;
@@ -594,6 +696,33 @@
       li.querySelector(".item-left").addEventListener("click", () => {
         const itemRef = doc(db, "lists", activeListId, "items", item.id);
         updateDoc(itemRef, { completed: !item.completed });
+      });
+
+      // Aantal verlagen (-)
+      li.querySelector(".btn-qty-minus").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentQty = item.qty ?? 1;
+        if (currentQty > 1) {
+          const itemRef = doc(db, "lists", activeListId, "items", item.id);
+          updateDoc(itemRef, { qty: currentQty - 1 });
+        } else {
+          openConfirmModal(
+            `'${item.name}' verwijderen?`,
+            "Het aantal is 0. Wil je dit product van de lijst halen?",
+            () => {
+              const itemRef = doc(db, "lists", activeListId, "items", item.id);
+              deleteDoc(itemRef);
+            }
+          );
+        }
+      });
+
+      // Aantal verhogen (+)
+      li.querySelector(".btn-qty-plus").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentQty = item.qty ?? 1;
+        const itemRef = doc(db, "lists", activeListId, "items", item.id);
+        updateDoc(itemRef, { qty: currentQty + 1 });
       });
 
       // Omhoog
@@ -608,12 +737,15 @@
         if (index < sorted.length - 1) swapOrder(sorted[index], sorted[index + 1]);
       });
 
-      // Hernoemen item
+      // Hernoemen item + aantal aanpassen
       li.querySelector(".btn-item-edit").addEventListener("click", (e) => {
         e.stopPropagation();
-        openPromptModal("Product aanpassen", item.name, async (newName) => {
+        openPromptModal("Product aanpassen", item.name, item.qty ?? 1, async (newName, newQty) => {
           const itemRef = doc(db, "lists", activeListId, "items", item.id);
-          await updateDoc(itemRef, { name: newName });
+          await updateDoc(itemRef, { 
+            name: newName,
+            qty: newQty
+          });
         });
       });
 
@@ -638,6 +770,7 @@
     await batch.commit();
   }
 
+  // Nieuw item toevoegen (standaard qty: 1)
   document.getElementById("add-item-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = inputEl.value.trim();
@@ -650,6 +783,7 @@
     const itemsCol = collection(db, "lists", activeListId, "items");
     await addDoc(itemsCol, {
       name: name,
+      qty: 1, // Standaard aantal is 1
       completed: false,
       order: nextOrder,
       createdAt: serverTimestamp()
@@ -700,17 +834,27 @@
     onConfirmCallback = null;
   });
 
-  // --- MODAAL 2: HERNOEMEN (PROMPT) ---
+  // --- MODAAL 2: HERNOEMEN & AANTAL (PROMPT) ---
   const promptModalEl = document.getElementById("prompt-modal");
   const promptTitle = document.getElementById("prompt-title");
   const promptInput = document.getElementById("prompt-input");
+  const promptQtyInput = document.getElementById("prompt-qty-input");
+  const promptQtyWrapper = document.getElementById("prompt-qty-wrapper");
   const promptCancel = document.getElementById("btn-prompt-cancel");
   const promptConfirm = document.getElementById("btn-prompt-confirm");
   let onPromptCallback = null;
 
-  function openPromptModal(title, currentValue, onSave) {
+  function openPromptModal(title, currentName, currentQty, onSave) {
     promptTitle.textContent = title;
-    promptInput.value = currentValue;
+    promptInput.value = currentName;
+    
+    if (currentQty !== null && currentQty !== undefined) {
+      promptQtyWrapper.style.display = "block";
+      promptQtyInput.value = currentQty;
+    } else {
+      promptQtyWrapper.style.display = "none";
+    }
+
     onPromptCallback = onSave;
     promptModalEl.classList.remove("hidden");
     setTimeout(() => { promptInput.focus(); promptInput.select(); }, 50);
@@ -724,8 +868,9 @@
   promptConfirm.addEventListener("click", async () => {
     const val = promptInput.value.trim();
     if (!val) return;
+    const qtyVal = parseInt(promptQtyInput.value, 10) || 1;
     promptModalEl.classList.add("hidden");
-    if (onPromptCallback) await onPromptCallback(val);
+    if (onPromptCallback) await onPromptCallback(val, qtyVal);
     onPromptCallback = null;
   });
 
