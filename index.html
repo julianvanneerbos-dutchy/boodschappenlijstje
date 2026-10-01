@@ -393,10 +393,8 @@
     query, orderBy, serverTimestamp, writeBatch, getDocs 
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // JOUW PINCODE:
   const APP_PIN = "2112";
 
-  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDK3TfrCTrpEXgDeG7eD2_B2KEDwPmqWQE",
     authDomain: "onze-boodschappenlijst.firebaseapp.com",
@@ -411,20 +409,19 @@
   const db = getFirestore(app);
   const listsCol = collection(db, "lists");
 
-  // DOM Views
   const authView = document.getElementById("view-auth");
   const dashboardView = document.getElementById("view-dashboard");
   const detailView = document.getElementById("view-list-detail");
   const pinInput = document.getElementById("auth-pin");
   const authError = document.getElementById("auth-error");
 
-  // State
+  // --- STATE ROUTER VARIABELEN ---
   let activeListId = null;
   let activeListName = "";
   let currentItems = [];
   let unsubscribeLists = null;
   let unsubscribeItems = null;
-  let listsData = {}; // Slaat de namen op voor de Hash Router
+  let currentView = "auth"; 
 
   // --- PINCODE LOGICA ---
   function checkStoredAuth() {
@@ -457,73 +454,76 @@
     if (unsubscribeLists) unsubscribeLists();
     if (unsubscribeItems) unsubscribeItems();
     
-    // Zorg dat het startscherm schoon is
-    history.replaceState(null, null, window.location.pathname);
+    history.replaceState({ view: "auth" }, "");
+    currentView = "auth";
     
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
     authView.classList.remove("hidden");
   });
 
+  // --- STRICT STATE ROUTER ---
   function unlockApp() {
     authView.classList.add("hidden");
-    
-    // De app start ALTIJD op de schone, hash-vrije URL
-    history.replaceState(null, null, window.location.pathname);
     dashboardView.classList.remove("hidden");
+    
+    // Veranker het dashboard als de harde, enige basis in de geschiedenis
+    history.replaceState({ view: "dashboard" }, "");
+    currentView = "dashboard";
     
     startDashboardListener();
   }
 
-  // --- HASH ROUTER (VOORKOMT ZWARTE SCHERMEN) ---
-  window.addEventListener("hashchange", () => {
-    const hash = window.location.hash;
-    
-    // Als we in de URL #list-... zien staan
-    if (hash.startsWith("#list-")) {
-      const listId = hash.replace("#list-", "");
-      const listName = listsData[listId]?.name || "Boodschappenlijst";
-      
-      activeListId = listId;
-      activeListName = listName;
-      document.getElementById("active-list-title").textContent = listName;
+  function openList(listId, listName) {
+    activeListId = listId;
+    activeListName = listName;
+    document.getElementById("active-list-title").textContent = listName;
 
-      dashboardView.classList.add("hidden");
-      detailView.classList.remove("hidden");
+    dashboardView.classList.add("hidden");
+    detailView.classList.remove("hidden");
 
-      listenToItems(listId);
-    } else {
-      // Als er geen hash is, of een onbekende, gaan we gegarandeerd naar het Dashboard
-      if (unsubscribeItems) unsubscribeItems();
-      activeListId = null;
-      detailView.classList.add("hidden");
-      dashboardView.classList.remove("hidden");
-      
-      // Sluit onmiddellijk pop-ups af (voor het geval iemand back swipet tijdens een pop-up)
-      document.getElementById("confirm-modal").classList.add("hidden");
-      document.getElementById("prompt-modal").classList.add("hidden");
-      onConfirmCallback = null;
-      onPromptCallback = null;
+    // Push alleen een state als we vanaf het dashboard komen
+    if (currentView === "dashboard") {
+      history.pushState({ view: "list" }, "");
+      currentView = "list";
     }
-  });
 
-  // De fysieke terug-knop van je UI activeert simpelweg een stap terug in de browser.
-  // Dit zorgt ervoor dat Android's Back Swipe en de UI knop precies hetzelfde doen!
-  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      window.location.hash = ""; // Fallback
-    }
-  });
-
-  function openList(listId) {
-    // Dit verplaatst de URL naar #list-id. Hierdoor snapt de browser: "Aha, nieuwe pagina!"
-    window.location.hash = "list-" + listId;
+    listenToItems(listId);
   }
 
+  function showDashboardUI() {
+    if (unsubscribeItems) unsubscribeItems();
+    activeListId = null;
+    detailView.classList.add("hidden");
+    dashboardView.classList.remove("hidden");
+    
+    document.getElementById("confirm-modal").classList.add("hidden");
+    document.getElementById("prompt-modal").classList.add("hidden");
+    onConfirmCallback = null;
+    onPromptCallback = null;
 
-  // --- AUTOCOMPLETE PRODUCTEN (products.json) ---
+    currentView = "dashboard";
+  }
+
+  // De fysieke terug-knop in het scherm pusht history.back(). 
+  // Dit zorgt dat het popstate-event het zware werk doet (geen dubbele states meer!)
+  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
+    if (currentView === "list") {
+      history.back(); // Triggert het event hieronder
+    }
+  });
+
+  // Luistert naar zowel de On-Screen Back knop als de Android Hardware/Swipe back!
+  window.addEventListener("popstate", (e) => {
+    if (!e.state || e.state.view !== "list") {
+      if (currentView === "list") {
+        showDashboardUI();
+      }
+    }
+  });
+
+
+  // --- AUTOCOMPLETE PRODUCTEN ---
   let commonGroceries = [];
   fetch('products.json?v=' + Date.now())
     .then(res => res.ok ? res.json() : [])
@@ -583,7 +583,6 @@
 
     unsubscribeLists = onSnapshot(qLists, (snapshot) => {
       listsContainer.innerHTML = "";
-      listsData = {}; // Schoon het geheugen op
       
       if (snapshot.empty) {
         listsEmpty.classList.remove("hidden");
@@ -594,9 +593,6 @@
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const listId = docSnap.id;
-        
-        // Sla gegevens op voor de Hash Router
-        listsData[listId] = data;
         
         const li = document.createElement("li");
         li.className = "list-card";
@@ -631,8 +627,7 @@
           }
         });
 
-        // Bij klikken openen we via de Hash Router
-        li.addEventListener("click", () => openList(listId));
+        li.addEventListener("click", () => openList(listId, data.name));
 
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
           e.stopPropagation();
@@ -759,7 +754,7 @@
           ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
         </div>
         <div class="item-actions">
-          <button class="btn-action-small btn-item-edit" title="Bewerken">✏️</button>
+          <button class="btn-action-small btn-item-edit" title="Bewerken">✏️️</button>
           <button class="btn-action-small btn-delete-item" title="Verwijderen">&times;</button>
         </div>
       `;
