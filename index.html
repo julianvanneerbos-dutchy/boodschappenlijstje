@@ -125,13 +125,15 @@ const firebaseConfig = {
 
 let commonGroceries = [];
 
-// Laadt de lijst in vanaf GitHub Pages of een externe JSON
-fetch('products.json')
-  .then(res => res.json())
-  .then(data => {
-    commonGroceries = data;
-  });
-
+// 1. Laad de 5000+ producten in uit products.json
+  let commonGroceries = [];
+  fetch('products.json')
+    .then(res => res.json())
+    .then(data => {
+      commonGroceries = data;
+    })
+    .catch(err => console.error("Kon products.json niet inladen:", err));
+  
   // Autocomplete logica
   const inputEl = document.getElementById("item-input");
   const suggestionsEl = document.getElementById("suggestions");
