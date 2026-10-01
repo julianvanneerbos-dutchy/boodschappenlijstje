@@ -123,22 +123,14 @@ const firebaseConfig = {
   const db = getFirestore(app);
   const itemsCol = collection(db, "groceries");
 
-  // Uitgebreide lijst met populaire supermarktproducten
-  const commonGroceries = [
-    "Aardappelen", "Appels", "Avocado", "Bananen", "Basilicum", "Bier", "Boter", 
-    "Brood", "Champignons", "Chocolade", "Citroenen", "Cola", "Courgette", 
-    "Crème fraîche", "Croissants", "Diepvrieserwtjes", "Eieren", "Gehakt", 
-    "Geraspte kaas", "Griekse yoghurt", "Havermout", "Hummus", "IJsbergsla", 
-    "Kaas", "Karnemelk", "Ketchup", "Kipfilet", "Knoflook", "Koffie", 
-    "Koffiebonen", "Komkommer", "Kruidenboter", "Kroepoek", "Luier", "Mandarijnen", 
-    "Mayonaise", "Melk", "Mosterd", "Mozzarella", "Muesli", "Noten", "Olijfolie", 
-    "Ontbijtkoek", "Paprika", "Pasta", "Pindakaas", "Pistolets", "Prei", 
-    "Rijst", "Rode uien", "Roomkaas", "Rundergehakt", "Sambal", "Sinaasappels", 
-    "Sla", "Slagroom", "Spaghetti", "Spinazie", "Tandpasta", "Thee", "Tomaat", 
-    "Tomaten", "Tomatenblokjes", "Uien", "Vissticks", "Vla", "Volkorenbrood", 
-    "Wasmiddel", "Wc-papier", "Witte asperges", "Wortels", "Yoghurt", "Zalm", 
-    "Zilvervliesrijst", "Zout"
-  ].sort((a, b) => a.localeCompare('nl'));
+let commonGroceries = [];
+
+// Laadt de lijst in vanaf GitHub Pages of een externe JSON
+fetch('products.json')
+  .then(res => res.json())
+  .then(data => {
+    commonGroceries = data;
+  });
 
   // Autocomplete logica
   const inputEl = document.getElementById("item-input");
