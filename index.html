@@ -166,7 +166,7 @@
       height: 1.35rem;
       cursor: pointer;
       border-radius: 6px;
-      pointer-events: none; /* Kliks vangen we af via de checkbox-btn wrapper */
+      pointer-events: none;
     }
 
     /* De rest van de regel (drag & scroll zone) */
@@ -717,7 +717,7 @@
         </div>
       `;
 
-      // 1. AFVINKEN GEBEURT EXCLUSIEF VIA DE CHECKBOX-KNOP
+      // 1. AFVINKEN EXCLUSIEF VIA DE CHECKBOX-KNOP
       const chkBtn = li.querySelector(".checkbox-btn");
       chkBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -725,7 +725,7 @@
         updateDoc(itemRef, { completed: !item.completed });
       });
 
-      // 2. LONG-PRESS DRAG VOOR MOBIEL (alleen op de rest van de rij, niet op knoppen)
+      // 2. LONG-PRESS DRAG VOOR MOBIEL
       attachTouchInteractions(li, item);
 
       // 3. DESKTOP DRAG VOOR DE MUIS
@@ -765,7 +765,6 @@
     const PRESS_DURATION = 260;
 
     li.addEventListener("touchstart", (e) => {
-      // Negeer knopjes (zoals checkbox of bewerken)
       if (e.target.closest(".item-actions") || e.target.closest(".checkbox-btn")) return;
 
       const touch = e.touches[0];
@@ -790,7 +789,6 @@
       const deltaX = Math.abs(touch.clientX - startX);
       const deltaY = Math.abs(touch.clientY - startY);
 
-      // Zodra je vinger meer dan 6px verplaatst, is het een scrollbeweging en annuleren we de long-press
       if (deltaX > 6 || deltaY > 6) {
         if (pressTimer) {
           clearTimeout(pressTimer);
@@ -804,7 +802,6 @@
         clearTimeout(pressTimer);
         pressTimer = null;
       }
-      // LET OP: Hier staat bewust GEEN toggle meer in! Afvinken kan alleen nog via de checkbox-knop.
     });
 
     li.addEventListener("touchcancel", () => {
@@ -1026,7 +1023,15 @@
     onPromptCallback = null;
   });
 
+  // Start authenticatiecontrole
   checkStoredAuth();
+
+  // Service Worker registreren voor Firefox / Chrome PWA installatie
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.log('SW registratie:', err);
+    });
+  }
 </script>
 </body>
 </html>
