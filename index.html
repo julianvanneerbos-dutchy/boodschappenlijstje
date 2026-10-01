@@ -463,9 +463,6 @@
     if (unsubscribeLists) unsubscribeLists();
     if (unsubscribeItems) unsubscribeItems();
     
-    // Verwijder eventuele actieve geschiedenis, zodat Terug-knop niet breekt
-    history.replaceState(null, "");
-    
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
     authView.classList.remove("hidden");
@@ -474,10 +471,6 @@
   function unlockApp() {
     authView.classList.add("hidden");
     dashboardView.classList.remove("hidden");
-    
-    // Bij inloggen, zet de basis geschiedenis status
-    history.replaceState({ view: "dashboard" }, "");
-    
     startDashboardListener();
   }
 
@@ -646,8 +639,14 @@
     activeListId = null;
     detailView.classList.add("hidden");
     dashboardView.classList.remove("hidden");
+    
+    // Sluit veilig eventuele pop-ups als de gebruiker abrupt back swipet
+    document.getElementById("confirm-modal").classList.add("hidden");
+    document.getElementById("prompt-modal").classList.add("hidden");
+    onConfirmCallback = null;
+    onPromptCallback = null;
 
-    if (popHistory && history.state && history.state.view === "detail") {
+    if (popHistory) {
       history.back();
     }
   }
