@@ -19,7 +19,7 @@
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    /* overscroll-behavior voorkomt de irritante 'pull-to-refresh' herlaad-actie op Android */
+    /* overscroll-behavior voorkomt pull-to-refresh herlaad-actie op Android */
     body { background-color: #f3f4f6; margin: 0; padding: 1.25rem; display: flex; justify-content: center; overscroll-behavior-y: none; }
     
     .container { width: 100%; max-width: 480px; background: #fff; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
@@ -136,10 +136,9 @@
       background: #fff;
       border-radius: 10px;
       
-      /* Selecties en text-menus blokkeren voor drag-and-drop */
       user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none;
+      -webkit-touch-callout: none; /* Voorkomt Android tekst-menu's tijdens draggen */
       
       touch-action: pan-y;
       cursor: grab;
@@ -148,7 +147,6 @@
     li.item-row:active { cursor: grabbing; }
     li.item-row.is-done { opacity: 0.55; cursor: default; }
     
-    /* Dragging toestand */
     li.item-row.is-dragging {
       background: #eff6ff;
       border: 1.5px dashed #2563eb;
@@ -157,7 +155,6 @@
       z-index: 40;
     }
 
-    /* Checkbox specifieke tap-zone */
     .checkbox-btn {
       background: transparent;
       border: none;
@@ -177,7 +174,6 @@
       pointer-events: none;
     }
 
-    /* De rest van de regel (drag & scroll zone) */
     .item-content { 
       display: flex; 
       align-items: center; 
@@ -211,7 +207,6 @@
     .btn-item-edit:active { background: #e5e7eb; }
     .btn-delete-item { color: #ef4444; font-size: 1.4rem; padding: 0.2rem 0.4rem; }
 
-    /* Statistiekenbalk onderaan met 3 tellers */
     .summary-card {
       margin-top: 1.25rem;
       background: #f8fafc;
@@ -231,7 +226,6 @@
     .summary-value.in-cart { color: #16a34a; }
     .summary-divider { width: 1px; height: 26px; background: #cbd5e1; }
 
-    /* Footer */
     .list-footer { margin-top: 1.25rem; text-align: center; }
     .btn-clear-all {
       background: #fee2e2;
@@ -246,7 +240,6 @@
     .btn-clear-all:active { background: #fecaca; }
     .btn-clear-all:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* Modaal */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -471,6 +464,7 @@
   function unlockApp() {
     authView.classList.add("hidden");
     dashboardView.classList.remove("hidden");
+    // GEEN replaceState meer hier, we laten de basis puur en leeg!
     startDashboardListener();
   }
 
@@ -576,7 +570,7 @@
           }
         });
 
-        li.addEventListener("click", () => openList(listId, data.name, true));
+        li.addEventListener("click", () => openList(listId, data.name));
 
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
           e.stopPropagation();
@@ -619,7 +613,7 @@
   });
 
   // --- DETAIL: EEN GEOPENDE LIJST & HISTORY API ---
-  function openList(listId, listName, pushHistory = true) {
+  function openList(listId, listName) {
     activeListId = listId;
     activeListName = listName;
     document.getElementById("active-list-title").textContent = listName;
@@ -627,41 +621,37 @@
     dashboardView.classList.add("hidden");
     detailView.classList.remove("hidden");
 
-    if (pushHistory) {
-      history.pushState({ view: "detail", listId: listId, listName: listName }, "");
-    }
+    // We pushen pas geschiedenis als we IETS OPENEN.
+    history.pushState({ view: "detail" }, "");
 
     listenToItems(listId);
   }
 
-  function goBackToDashboard(popHistory = true) {
+  function goBackToDashboard() {
     if (unsubscribeItems) unsubscribeItems();
     activeListId = null;
     detailView.classList.add("hidden");
     dashboardView.classList.remove("hidden");
     
-    // Sluit veilig eventuele pop-ups als de gebruiker abrupt back swipet
+    // Sluit direct zwevende modals bij een terug-actie!
     document.getElementById("confirm-modal").classList.add("hidden");
     document.getElementById("prompt-modal").classList.add("hidden");
     onConfirmCallback = null;
     onPromptCallback = null;
-
-    if (popHistory) {
-      history.back();
-    }
   }
 
+  // De back knop (<- Overzicht) in de UI triggert nu de browser-back. 
+  // Dit zorgt dat popstate altijd het werk doet.
   document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    goBackToDashboard(true);
+    history.back(); 
   });
 
-  // Vangt de fysieke Android/Swipe back-knop af
+  // DE MAGIE: Popstate handelt alles af, of je nu de on-screen knop of de Android swipe back gebruikt
   window.addEventListener("popstate", (e) => {
-    if (e.state && e.state.view === "detail") {
-      openList(e.state.listId, e.state.listName, false);
-    } else {
+    // Als de state leeg is, betekent dit dat we weer op de begin-url zijn beland
+    if (!e.state) {
       if (!detailView.classList.contains("hidden")) {
-        goBackToDashboard(false);
+        goBackToDashboard();
       }
     }
   });
@@ -755,14 +745,12 @@
         </div>
       `;
 
-      // Voorkom context-menu (Kopiëren/Delen) tijdens lang indrukken op mobiel
       li.addEventListener("contextmenu", (e) => {
         if (!item.completed) {
           e.preventDefault();
         }
       });
 
-      // 1. AFVINKEN EXCLUSIEF VIA DE CHECKBOX-KNOP
       const chkBtn = li.querySelector(".checkbox-btn");
       chkBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -770,13 +758,9 @@
         updateDoc(itemRef, { completed: !item.completed });
       });
 
-      // 2. LONG-PRESS DRAG VOOR MOBIEL
       attachTouchInteractions(li, item);
-
-      // 3. DESKTOP DRAG VOOR DE MUIS
       attachDesktopDrag(li, item);
 
-      // 4. BEWERKEN VIA POTLOODJE
       li.querySelector(".btn-item-edit").addEventListener("click", (e) => {
         e.stopPropagation();
         openPromptModal("Product aanpassen", item.name, item.qty ?? 1, async (newName, newQty) => {
@@ -788,7 +772,6 @@
         });
       });
 
-      // 5. VERWIJDEREN VIA KRUISJE
       li.querySelector(".btn-delete-item").addEventListener("click", (e) => {
         e.stopPropagation();
         const itemRef = doc(db, "lists", activeListId, "items", item.id);
@@ -801,7 +784,6 @@
     setupListDropZone(listEl);
   }
 
-  // --- MOBIELE TOUCH INTERACTIE (MET HARDE SCROLL-PROTECTIE) ---
   function attachTouchInteractions(li, item) {
     let pressTimer = null;
     let isLongPress = false;
@@ -891,7 +873,6 @@
     window.addEventListener("touchend", onEnd);
   }
 
-  // --- DESKTOP DRAG & DROP (HTML5 API) ---
   function attachDesktopDrag(li, item) {
     if (item.completed) return;
 
@@ -963,7 +944,6 @@
     renderItems();
   }
 
-  // Nieuw item toevoegen
   document.getElementById("add-item-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = inputEl.value.trim();
@@ -986,7 +966,6 @@
     suggestionsEl.style.display = "none";
   });
 
-  // Alle producten van actieve lijst wissen
   document.getElementById("btn-open-clear-items").addEventListener("click", () => {
     openConfirmModal(
       `Alle producten wissen?`,
@@ -1002,7 +981,7 @@
     );
   });
 
-  // --- MODAAL 1: BEVESTIGING (WISSEN) ---
+  // --- MODAL LOGICA ---
   const confirmModalEl = document.getElementById("confirm-modal");
   const modalTitle = document.getElementById("modal-title");
   const modalMsg = document.getElementById("modal-message");
@@ -1028,7 +1007,6 @@
     onConfirmCallback = null;
   });
 
-  // --- MODAAL 2: HERNOEMEN & AANTAL (PROMPT) ---
   const promptModalEl = document.getElementById("prompt-modal");
   const promptTitle = document.getElementById("prompt-title");
   const promptInput = document.getElementById("prompt-input");
@@ -1071,7 +1049,7 @@
   // Start authenticatiecontrole
   checkStoredAuth();
 
-  // Service Worker registreren voor Firefox / Chrome PWA installatie
+  // Service Worker registreren
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(err => {
       console.log('SW registratie:', err);
