@@ -393,8 +393,10 @@
     query, orderBy, serverTimestamp, writeBatch, getDocs 
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  // JOUW PINCODE:
   const APP_PIN = "2112";
 
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyDK3TfrCTrpEXgDeG7eD2_B2KEDwPmqWQE",
     authDomain: "onze-boodschappenlijst.firebaseapp.com",
@@ -409,19 +411,19 @@
   const db = getFirestore(app);
   const listsCol = collection(db, "lists");
 
+  // DOM Views
   const authView = document.getElementById("view-auth");
   const dashboardView = document.getElementById("view-dashboard");
   const detailView = document.getElementById("view-list-detail");
   const pinInput = document.getElementById("auth-pin");
   const authError = document.getElementById("auth-error");
 
-  // --- STATE ROUTER VARIABELEN ---
+  // State
   let activeListId = null;
   let activeListName = "";
   let currentItems = [];
   let unsubscribeLists = null;
   let unsubscribeItems = null;
-  let currentView = "auth"; 
 
   // --- PINCODE LOGICA ---
   function checkStoredAuth() {
@@ -454,76 +456,73 @@
     if (unsubscribeLists) unsubscribeLists();
     if (unsubscribeItems) unsubscribeItems();
     
-    history.replaceState({ view: "auth" }, "");
-    currentView = "auth";
+    // Leeg de hash zodat we echt schoon op slot gaan
+    window.location.hash = "";
     
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
     authView.classList.remove("hidden");
   });
 
-  // --- STRICT STATE ROUTER ---
   function unlockApp() {
     authView.classList.add("hidden");
-    dashboardView.classList.remove("hidden");
-    
-    // Veranker het dashboard als de harde, enige basis in de geschiedenis
-    history.replaceState({ view: "dashboard" }, "");
-    currentView = "dashboard";
-    
     startDashboardListener();
+    handleRoute(); // Bepaal de pagina via veilige hash
   }
 
-  function openList(listId, listName) {
-    activeListId = listId;
-    activeListName = listName;
-    document.getElementById("active-list-title").textContent = listName;
-
-    dashboardView.classList.add("hidden");
-    detailView.classList.remove("hidden");
-
-    // Push alleen een state als we vanaf het dashboard komen
-    if (currentView === "dashboard") {
-      history.pushState({ view: "list" }, "");
-      currentView = "list";
-    }
-
-    listenToItems(listId);
-  }
-
-  function showDashboardUI() {
-    if (unsubscribeItems) unsubscribeItems();
-    activeListId = null;
-    detailView.classList.add("hidden");
-    dashboardView.classList.remove("hidden");
+  // --- 100% NATIVE HASH ROUTING (FIX VOOR ZWART SCHERM) ---
+  function handleRoute() {
+    const hash = window.location.hash;
     
-    document.getElementById("confirm-modal").classList.add("hidden");
-    document.getElementById("prompt-modal").classList.add("hidden");
-    onConfirmCallback = null;
-    onPromptCallback = null;
+    // Als er een #list-... in de adresbalk staat:
+    if (hash.startsWith("#list-")) {
+      const listId = hash.replace("#list-", "");
+      // Haal naam op uit sessie, anders standaard fallback
+      const listName = sessionStorage.getItem("listName-" + listId) || "Boodschappenlijst";
+      
+      activeListId = listId;
+      activeListName = listName;
+      document.getElementById("active-list-title").textContent = listName;
 
-    currentView = "dashboard";
+      dashboardView.classList.add("hidden");
+      detailView.classList.remove("hidden");
+
+      listenToItems(listId);
+    } 
+    // Anders (leeg of onbekend), toon altijd het Dashboard
+    else {
+      if (unsubscribeItems) unsubscribeItems();
+      activeListId = null;
+      detailView.classList.add("hidden");
+      dashboardView.classList.remove("hidden");
+      
+      // Meteen eventuele zwevende pop-ups sluiten (veiligheid)
+      document.getElementById("confirm-modal").classList.add("hidden");
+      document.getElementById("prompt-modal").classList.add("hidden");
+      onConfirmCallback = null;
+      onPromptCallback = null;
+    }
   }
 
-  // De fysieke terug-knop in het scherm pusht history.back(). 
-  // Dit zorgt dat het popstate-event het zware werk doet (geen dubbele states meer!)
+  // Android's fysieke back swipe verandert de Hash (URL). Wij luisteren ernaar.
+  window.addEventListener("hashchange", handleRoute);
+
+  // De visuele (<- Overzicht) knop in je app drukt feitelijk gewoon de browser "terug" in
   document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    if (currentView === "list") {
-      history.back(); // Triggert het event hieronder
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.hash = ""; // Fallback als de app vers was gestart met een open lijst
     }
   });
 
-  // Luistert naar zowel de On-Screen Back knop als de Android Hardware/Swipe back!
-  window.addEventListener("popstate", (e) => {
-    if (!e.state || e.state.view !== "list") {
-      if (currentView === "list") {
-        showDashboardUI();
-      }
-    }
-  });
+  // Zo openen we nu veilig een lijstje, puur door de URL-hash te wijzigen
+  function openList(listId, listName) {
+    sessionStorage.setItem("listName-" + listId, listName);
+    window.location.hash = "list-" + listId;
+  }
 
-
-  // --- AUTOCOMPLETE PRODUCTEN ---
+  // --- AUTOCOMPLETE PRODUCTEN (products.json) ---
   let commonGroceries = [];
   fetch('products.json?v=' + Date.now())
     .then(res => res.ok ? res.json() : [])
@@ -583,7 +582,6 @@
 
     unsubscribeLists = onSnapshot(qLists, (snapshot) => {
       listsContainer.innerHTML = "";
-      
       if (snapshot.empty) {
         listsEmpty.classList.remove("hidden");
       } else {
@@ -627,6 +625,7 @@
           }
         });
 
+        // Bij klikken roepen we openList aan met de veilige hash-methode
         li.addEventListener("click", () => openList(listId, data.name));
 
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
@@ -668,7 +667,6 @@
     });
     input.value = "";
   });
-
 
   function listenToItems(listId) {
     if (unsubscribeItems) unsubscribeItems();
@@ -754,7 +752,7 @@
           ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
         </div>
         <div class="item-actions">
-          <button class="btn-action-small btn-item-edit" title="Bewerken">✏️️</button>
+          <button class="btn-action-small btn-item-edit" title="Bewerken">✏️</button>
           <button class="btn-action-small btn-delete-item" title="Verwijderen">&times;</button>
         </div>
       `;
