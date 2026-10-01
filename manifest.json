@@ -9,10 +9,16 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>",
-      "sizes": "any",
+      "src": "https://api.iconify.design/noto:shopping-cart.svg",
+      "sizes": "192x192 512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f6d2.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
