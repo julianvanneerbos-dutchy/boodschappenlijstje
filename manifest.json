@@ -1,0 +1,20 @@
+{
+  "name": "Boodschappen",
+  "short_name": "Boodschappen",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://fav.farm/🛒",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://fav.farm/🛒",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
