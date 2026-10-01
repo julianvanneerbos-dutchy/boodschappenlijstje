@@ -402,10 +402,23 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { 
-    getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, 
-    query, orderBy, serverTimestamp, writeBatch, getDocs 
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  orderBy,
+  serverTimestamp,
+  writeBatch,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const APP_PIN = "2112";
 
@@ -419,9 +432,26 @@
     measurementId: "G-DD8RZY54ZE"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const listsCol = collection(db, "lists");
+const app = initializeApp(firebaseConfig);
+
+// Firestore met permanente offline-cache.
+// Hierdoor blijven boodschappenlijsten beschikbaar zonder internet
+// en worden offline wijzigingen automatisch gesynchroniseerd zodra
+// de verbinding terugkomt.
+let db;
+
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} catch (error) {
+  console.warn("Offline-cache kon niet worden ingeschakeld:", error);
+  db = getFirestore(app);
+}
+
+const listsCol = collection(db, "lists");
 
   const authView = document.getElementById("view-auth");
   const dashboardView = document.getElementById("view-dashboard");
