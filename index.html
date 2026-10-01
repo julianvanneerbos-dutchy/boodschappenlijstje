@@ -301,7 +301,7 @@
     startDashboardListener();
   }
 
-  // --- SCHOON EN STABIEL (GEEN GESCHIEDENIS MANIPULATIE) ---
+  // --- STABIELE SCHERM-WISSELING ZONDER GESCHIEDENIS BUGS ---
   function openList(listId, listName) {
     activeListId = listId;
     activeListName = listName;
@@ -326,27 +326,10 @@
     onPromptCallback = null;
   }
 
-  // De knop in de app brengt je direct terug naar het dashboard zonder browser-fouten
+  // Navigatie via de app-knop
   document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
     goBackToDashboard();
   });
-
-  // Als je op Android op terug swipet terwijl je in een lijst zit, gaan we netjes naar het dashboard.
-  // Zit je al op het dashboard? Dan bemoeien we ons er niet mee, en sluit Android de app direct netjes af.
-  window.addEventListener("popstate", (e) => {
-    if (!detailView.classList.contains("hidden")) {
-      goBackToDashboard();
-      // Duw de geschiedenis meteen weer recht zodat Android op de dashboard-laag blijft
-      history.pushState(null, "");
-    }
-  });
-
-  // Bij het openen van een lijst zetten we een anker in de geschiedenis zodat de eerste swipe naar het dashboard leidt
-  const originalOpenList = openList;
-  openList = function(listId, listName) {
-    history.pushState({ view: "list" }, "");
-    originalOpenList(listId, listName);
-  };
 
 
   // --- AUTOCOMPLETE PRODUCTEN ---
@@ -688,7 +671,6 @@
     if (currentQty !== null) { document.getElementById("prompt-qty-wrapper").style.display = "block"; promptQtyInput.value = currentQty; } 
     else document.getElementById("prompt-qty-wrapper").style.display = "none";
     onPromptCallback = onSave;
-    promptModalEl.classList.add("hidden");
     promptModalEl.classList.remove("hidden");
     setTimeout(() => { promptInput.focus(); promptInput.select(); }, 50);
   }
