@@ -1,14 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Boodschappenlijst v2</title>
+  <title>Boodschappenlijst</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f3f4f6; margin: 0; padding: 1.25rem; display: flex; justify-content: center; }
     .container { width: 100%; max-width: 480px; background: #fff; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-    h1 { font-size: 1.5rem; margin-top: 0; margin-bottom: 1.25rem; color: #111827; display: flex; align-items: center; justify-content: space-between; }
+    h1 { font-size: 1.5rem; margin-top: 0; margin-bottom: 1.25rem; color: #111827; }
     
     .input-wrapper { position: relative; width: 100%; }
     .input-row { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
@@ -60,7 +61,7 @@
     .item-name { font-size: 1.05rem; color: #1f2937; word-break: break-word; }
     .done { text-decoration: line-through; color: #9ca3af; }
 
-    /* Knoppen */
+    /* Knoppen per item */
     .item-actions { display: flex; align-items: center; gap: 0.25rem; }
     .btn-move {
       background: #f3f4f6;
@@ -86,6 +87,62 @@
       padding: 0.2rem 0.5rem;
       margin-left: 0.25rem;
     }
+
+    /* Lijst legen footer knop */
+    .list-footer { margin-top: 1.5rem; text-align: center; }
+    .btn-clear-all {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-clear-all:active { background: #fecaca; }
+    .btn-clear-all:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Pop-up Modaal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .modal-box h3 { margin-top: 0; font-size: 1.25rem; color: #111827; }
+    .modal-box p { color: #6b7280; font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
+    .modal-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-cancel { background: #f3f4f6; color: #374151; }
+    .btn-cancel:active { background: #e5e7eb; }
+    .btn-confirm-delete { background: #ef4444; color: #ffffff; }
+    .btn-confirm-delete:active { background: #dc2626; }
   </style>
 </head>
 <body>
@@ -95,13 +152,31 @@
   
   <form id="add-form" class="input-row" autocomplete="off">
     <div class="input-wrapper">
-      <input type="text" id="item-input" placeholder="Typ product (bv. bananen)..." required>
+      <input type="text" id="item-input" placeholder="Wat moeten we halen? (bv. Bananen)" required>
       <ul id="suggestions" class="suggestions-list"></ul>
     </div>
     <button type="submit" class="btn-add">Toevoegen</button>
   </form>
 
   <ul id="items-list"></ul>
+
+  <div class="list-footer">
+    <button id="btn-open-clear" class="btn-clear-all" disabled>
+      🗑️ Hele lijst legen
+    </button>
+  </div>
+</div>
+
+<!-- Modal Pop-up -->
+<div id="clear-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Zeker weten?</h3>
+    <p>Weet je zeker dat je de hele boodschappenlijst wilt wissen?</p>
+    <div class="modal-actions">
+      <button id="btn-modal-cancel" class="modal-btn btn-cancel">Annuleren</button>
+      <button id="btn-modal-confirm" class="modal-btn btn-confirm-delete">Wissen</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -123,7 +198,7 @@
   const db = getFirestore(app);
   const itemsCol = collection(db, "groceries");
 
-  // 1. Laad producten in vanuit products.json (met cache-bypass)
+  // 1. Laad producten in vanuit products.json
   let commonGroceries = [];
   fetch('products.json?v=' + Date.now())
     .then(res => {
@@ -138,7 +213,7 @@
       commonGroceries = ["Banaan", "Bananen", "Brood", "Melk", "Tomaten", "Appels", "Eieren", "Kaas"];
     });
 
-  // 2. Autocomplete dropdown logica (touch- & desktop-proof)
+  // 2. Autocomplete dropdown logica
   const inputEl = document.getElementById("item-input");
   const suggestionsEl = document.getElementById("suggestions");
 
@@ -170,7 +245,6 @@
       const li = document.createElement("li");
       li.textContent = item;
 
-      // pointerdown triggert direct bij aanraking vóórdat het toetsenbord/blur optreedt
       li.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         selectSuggestion(item);
@@ -182,7 +256,6 @@
     suggestionsEl.style.display = "block";
   });
 
-  // Sluit de suggestielijst als er buiten wordt geklikt of getikt
   document.addEventListener("pointerdown", (e) => {
     if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
       suggestionsEl.style.display = "none";
@@ -191,6 +264,7 @@
 
   // 3. Realtime weergave met volgorde
   let currentItems = [];
+  const clearBtn = document.getElementById("btn-open-clear");
   const q = query(itemsCol, orderBy("order", "asc"));
 
   onSnapshot(q, (snapshot) => {
@@ -198,6 +272,10 @@
     snapshot.forEach(docSnap => {
       currentItems.push({ id: docSnap.id, ...docSnap.data() });
     });
+    
+    // Knop uitschakelen als er geen items zijn
+    clearBtn.disabled = currentItems.length === 0;
+
     renderList();
   });
 
@@ -248,7 +326,7 @@
     });
   }
 
-  // Volgorde verwisselen en doorvoeren in de database
+  // Volgorde verwisselen
   async function swapOrder(idx1, idx2) {
     const item1 = currentItems[idx1];
     const item2 = currentItems[idx2];
@@ -278,6 +356,30 @@
 
     inputEl.value = "";
     suggestionsEl.style.display = "none";
+  });
+
+  // 4. Modal en hele lijst wissen
+  const modalEl = document.getElementById("clear-modal");
+  const cancelBtn = document.getElementById("btn-modal-cancel");
+  const confirmBtn = document.getElementById("btn-modal-confirm");
+
+  clearBtn.addEventListener("click", () => {
+    modalEl.classList.remove("hidden");
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    modalEl.classList.add("hidden");
+  });
+
+  confirmBtn.addEventListener("click", async () => {
+    modalEl.classList.add("hidden");
+    if (currentItems.length === 0) return;
+
+    const batch = writeBatch(db);
+    currentItems.forEach(item => {
+      batch.delete(doc(db, "groceries", item.id));
+    });
+    await batch.commit();
   });
 </script>
 </body>
