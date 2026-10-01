@@ -123,8 +123,6 @@ const firebaseConfig = {
   const db = getFirestore(app);
   const itemsCol = collection(db, "groceries");
 
-let commonGroceries = [];
-
 // 1. Laad de 5000+ producten in uit products.json
   let commonGroceries = [];
   fetch('products.json')
