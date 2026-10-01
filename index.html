@@ -138,7 +138,7 @@
       
       user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none; /* Voorkomt Android tekst-menu's tijdens draggen */
+      -webkit-touch-callout: none;
       
       touch-action: pan-y;
       cursor: grab;
@@ -424,6 +424,7 @@
   let currentItems = [];
   let unsubscribeLists = null;
   let unsubscribeItems = null;
+  let listsData = {}; // Slaat de namen op voor de Hash Router
 
   // --- PINCODE LOGICA ---
   function checkStoredAuth() {
@@ -456,6 +457,9 @@
     if (unsubscribeLists) unsubscribeLists();
     if (unsubscribeItems) unsubscribeItems();
     
+    // Zorg dat het startscherm schoon is
+    history.replaceState(null, null, window.location.pathname);
+    
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
     authView.classList.remove("hidden");
@@ -463,10 +467,61 @@
 
   function unlockApp() {
     authView.classList.add("hidden");
+    
+    // De app start ALTIJD op de schone, hash-vrije URL
+    history.replaceState(null, null, window.location.pathname);
     dashboardView.classList.remove("hidden");
-    // GEEN replaceState meer hier, we laten de basis puur en leeg!
+    
     startDashboardListener();
   }
+
+  // --- HASH ROUTER (VOORKOMT ZWARTE SCHERMEN) ---
+  window.addEventListener("hashchange", () => {
+    const hash = window.location.hash;
+    
+    // Als we in de URL #list-... zien staan
+    if (hash.startsWith("#list-")) {
+      const listId = hash.replace("#list-", "");
+      const listName = listsData[listId]?.name || "Boodschappenlijst";
+      
+      activeListId = listId;
+      activeListName = listName;
+      document.getElementById("active-list-title").textContent = listName;
+
+      dashboardView.classList.add("hidden");
+      detailView.classList.remove("hidden");
+
+      listenToItems(listId);
+    } else {
+      // Als er geen hash is, of een onbekende, gaan we gegarandeerd naar het Dashboard
+      if (unsubscribeItems) unsubscribeItems();
+      activeListId = null;
+      detailView.classList.add("hidden");
+      dashboardView.classList.remove("hidden");
+      
+      // Sluit onmiddellijk pop-ups af (voor het geval iemand back swipet tijdens een pop-up)
+      document.getElementById("confirm-modal").classList.add("hidden");
+      document.getElementById("prompt-modal").classList.add("hidden");
+      onConfirmCallback = null;
+      onPromptCallback = null;
+    }
+  });
+
+  // De fysieke terug-knop van je UI activeert simpelweg een stap terug in de browser.
+  // Dit zorgt ervoor dat Android's Back Swipe en de UI knop precies hetzelfde doen!
+  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.hash = ""; // Fallback
+    }
+  });
+
+  function openList(listId) {
+    // Dit verplaatst de URL naar #list-id. Hierdoor snapt de browser: "Aha, nieuwe pagina!"
+    window.location.hash = "list-" + listId;
+  }
+
 
   // --- AUTOCOMPLETE PRODUCTEN (products.json) ---
   let commonGroceries = [];
@@ -528,6 +583,8 @@
 
     unsubscribeLists = onSnapshot(qLists, (snapshot) => {
       listsContainer.innerHTML = "";
+      listsData = {}; // Schoon het geheugen op
+      
       if (snapshot.empty) {
         listsEmpty.classList.remove("hidden");
       } else {
@@ -537,6 +594,10 @@
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         const listId = docSnap.id;
+        
+        // Sla gegevens op voor de Hash Router
+        listsData[listId] = data;
+        
         const li = document.createElement("li");
         li.className = "list-card";
         li.id = `card-${listId}`;
@@ -570,7 +631,8 @@
           }
         });
 
-        li.addEventListener("click", () => openList(listId, data.name));
+        // Bij klikken openen we via de Hash Router
+        li.addEventListener("click", () => openList(listId));
 
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
           e.stopPropagation();
@@ -612,49 +674,6 @@
     input.value = "";
   });
 
-  // --- DETAIL: EEN GEOPENDE LIJST & HISTORY API ---
-  function openList(listId, listName) {
-    activeListId = listId;
-    activeListName = listName;
-    document.getElementById("active-list-title").textContent = listName;
-
-    dashboardView.classList.add("hidden");
-    detailView.classList.remove("hidden");
-
-    // We pushen pas geschiedenis als we IETS OPENEN.
-    history.pushState({ view: "detail" }, "");
-
-    listenToItems(listId);
-  }
-
-  function goBackToDashboard() {
-    if (unsubscribeItems) unsubscribeItems();
-    activeListId = null;
-    detailView.classList.add("hidden");
-    dashboardView.classList.remove("hidden");
-    
-    // Sluit direct zwevende modals bij een terug-actie!
-    document.getElementById("confirm-modal").classList.add("hidden");
-    document.getElementById("prompt-modal").classList.add("hidden");
-    onConfirmCallback = null;
-    onPromptCallback = null;
-  }
-
-  // De back knop (<- Overzicht) in de UI triggert nu de browser-back. 
-  // Dit zorgt dat popstate altijd het werk doet.
-  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    history.back(); 
-  });
-
-  // DE MAGIE: Popstate handelt alles af, of je nu de on-screen knop of de Android swipe back gebruikt
-  window.addEventListener("popstate", (e) => {
-    // Als de state leeg is, betekent dit dat we weer op de begin-url zijn beland
-    if (!e.state) {
-      if (!detailView.classList.contains("hidden")) {
-        goBackToDashboard();
-      }
-    }
-  });
 
   function listenToItems(listId) {
     if (unsubscribeItems) unsubscribeItems();
