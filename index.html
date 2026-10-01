@@ -26,8 +26,8 @@
       background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      max-height: 210px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+      max-height: 220px;
       overflow-y: auto;
       z-index: 50;
       list-style: none;
@@ -36,13 +36,14 @@
       display: none;
     }
     .suggestions-list li {
-      padding: 0.75rem 1rem;
+      padding: 0.8rem 1rem;
       cursor: pointer;
       font-size: 1rem;
       border-bottom: 1px solid #f3f4f6;
+      -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
     }
     .suggestions-list li:last-child { border-bottom: none; }
-    .suggestions-list li:hover, .suggestions-list li.active { background-color: #eff6ff; color: #2563eb; font-weight: 500; }
+    .suggestions-list li:hover, .suggestions-list li:active { background-color: #eff6ff; color: #2563eb; font-weight: 500; }
 
     /* Boodschappenlijst */
     ul#items-list { list-style: none; padding: 0; margin: 0; }
@@ -59,14 +60,14 @@
     .item-name { font-size: 1.05rem; color: #1f2937; word-break: break-word; }
     .done { text-decoration: line-through; color: #9ca3af; }
 
-    /* Actieknoppen */
+    /* Knoppen */
     .item-actions { display: flex; align-items: center; gap: 0.25rem; }
     .btn-move {
       background: #f3f4f6;
       border: none;
       color: #6b7280;
-      width: 2rem;
-      height: 2rem;
+      width: 2.1rem;
+      height: 2.1rem;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -117,33 +118,49 @@
     appId: "1:188911309446:web:3283e385fc23f2ee65f707",
     measurementId: "G-DD8RZY54ZE"
   };
-  
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const itemsCol = collection(db, "groceries");
 
-  // 1. Laad de 5000+ producten in uit products.json
+  // 1. Laad producten in vanuit products.json (met cache-bypass)
   let commonGroceries = [];
-  fetch('products.json')
-    .then(res => res.json())
+  fetch('products.json?v=' + Date.now())
+    .then(res => {
+      if (!res.ok) throw new Error("Status " + res.status);
+      return res.json();
+    })
     .then(data => {
       commonGroceries = data;
     })
-    .catch(err => console.error("Kon products.json niet inladen:", err));
-  
-  // Autocomplete logica
+    .catch(err => {
+      console.error("Kon products.json niet laden, fallback actief:", err);
+      commonGroceries = ["Banaan", "Bananen", "Brood", "Melk", "Tomaten", "Appels", "Eieren", "Kaas"];
+    });
+
+  // 2. Autocomplete dropdown logica (touch- & desktop-proof)
   const inputEl = document.getElementById("item-input");
   const suggestionsEl = document.getElementById("suggestions");
+
+  function selectSuggestion(item) {
+    inputEl.value = item;
+    suggestionsEl.style.display = "none";
+    inputEl.focus();
+  }
 
   inputEl.addEventListener("input", () => {
     const val = inputEl.value.toLowerCase().trim();
     suggestionsEl.innerHTML = "";
+
     if (val.length < 1) {
       suggestionsEl.style.display = "none";
       return;
     }
 
-    const matches = commonGroceries.filter(item => item.toLowerCase().includes(val)).slice(0, 6);
+    const matches = commonGroceries
+      .filter(item => typeof item === "string" && item.toLowerCase().includes(val))
+      .slice(0, 6);
+
     if (matches.length === 0) {
       suggestionsEl.style.display = "none";
       return;
@@ -152,30 +169,34 @@
     matches.forEach(item => {
       const li = document.createElement("li");
       li.textContent = item;
-      li.addEventListener("mousedown", (e) => {
+
+      // pointerdown triggert direct bij aanraking vóórdat het toetsenbord/blur optreedt
+      li.addEventListener("pointerdown", (e) => {
         e.preventDefault();
-        inputEl.value = item;
-        suggestionsEl.style.display = "none";
-        inputEl.focus();
+        selectSuggestion(item);
       });
+
       suggestionsEl.appendChild(li);
     });
 
     suggestionsEl.style.display = "block";
   });
 
-  inputEl.addEventListener("blur", () => {
-    setTimeout(() => { suggestionsEl.style.display = "none"; }, 150);
+  // Sluit de suggestielijst als er buiten wordt geklikt of getikt
+  document.addEventListener("pointerdown", (e) => {
+    if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
+      suggestionsEl.style.display = "none";
+    }
   });
 
-  // Realtime lijst met volgorde-ondersteuning
+  // 3. Realtime weergave met volgorde
   let currentItems = [];
   const q = query(itemsCol, orderBy("order", "asc"));
 
   onSnapshot(q, (snapshot) => {
     currentItems = [];
-    snapshot.forEach(doc => {
-      currentItems.push({ id: doc.id, ...doc.data() });
+    snapshot.forEach(docSnap => {
+      currentItems.push({ id: docSnap.id, ...docSnap.data() });
     });
     renderList();
   });
@@ -205,13 +226,13 @@
         updateDoc(doc(db, "groceries", item.id), { completed: !item.completed });
       });
 
-      // Positie omhoog verplaatsen
+      // Omhoog verplaatsen
       li.querySelector(".btn-up").addEventListener("click", (e) => {
         e.stopPropagation();
         if (index > 0) swapOrder(index, index - 1);
       });
 
-      // Positie omlaag verplaatsen
+      // Omlaag verplaatsen
       li.querySelector(".btn-down").addEventListener("click", (e) => {
         e.stopPropagation();
         if (index < currentItems.length - 1) swapOrder(index, index + 1);
@@ -227,7 +248,7 @@
     });
   }
 
-  // Volgorde verwisselen en opslaan
+  // Volgorde verwisselen en doorvoeren in de database
   async function swapOrder(idx1, idx2) {
     const item1 = currentItems[idx1];
     const item2 = currentItems[idx2];
