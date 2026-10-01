@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Boodschappenlijstjes</title>
   
-  <!-- Web-App / Startscherm configuratie & Icoon -->
   <link rel="manifest" href="manifest.json">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,7 +17,6 @@
 
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    
     body { background-color: #f3f4f6; margin: 0; padding: 1.25rem; display: flex; justify-content: center; overscroll-behavior-y: none; }
     .container { width: 100%; max-width: 480px; background: #fff; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
     
@@ -26,17 +24,8 @@
     h1 { font-size: 1.45rem; margin: 0; color: #111827; display: flex; align-items: center; gap: 0.5rem; }
     
     .btn-icon {
-      background: #f3f4f6;
-      border: none;
-      padding: 0.5rem 0.75rem;
-      border-radius: 8px;
-      font-weight: 600;
-      color: #374151;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-size: 0.9rem;
+      background: #f3f4f6; border: none; padding: 0.5rem 0.75rem; border-radius: 8px;
+      font-weight: 600; color: #374151; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.9rem;
     }
     .btn-icon:active { background: #e5e7eb; }
 
@@ -53,43 +42,16 @@
     .auth-error { color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem; min-height: 1.2rem; }
 
     .suggestions-list {
-      position: absolute;
-      top: 105%;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-      max-height: 220px;
-      overflow-y: auto;
-      z-index: 50;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: none;
+      position: absolute; top: 105%; left: 0; right: 0; background: #ffffff; border: 1px solid #e5e7eb;
+      border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto; z-index: 50; list-style: none; padding: 0; margin: 0; display: none;
     }
-    .suggestions-list li {
-      padding: 0.8rem 1rem;
-      cursor: pointer;
-      font-size: 1rem;
-      border-bottom: 1px solid #f3f4f6;
-      -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1);
-    }
-    .suggestions-list li:last-child { border-bottom: none; }
+    .suggestions-list li { padding: 0.8rem 1rem; cursor: pointer; font-size: 1rem; border-bottom: 1px solid #f3f4f6; }
     .suggestions-list li:hover, .suggestions-list li:active { background-color: #eff6ff; color: #2563eb; font-weight: 500; }
 
     ul.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
     li.list-card {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 0.9rem 1.1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.15s ease;
+      background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0.9rem 1.1rem;
+      display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s ease;
     }
     li.list-card:active { background: #eff6ff; border-color: #bfdbfe; }
     .card-info { flex: 1; overflow: hidden; padding-right: 0.5rem; }
@@ -97,103 +59,40 @@
     .card-info span { font-size: 0.85rem; color: #6b7280; display: block; margin-top: 0.15rem; }
     
     .card-actions { display: flex; align-items: center; gap: 0.35rem; }
-    .btn-action-small {
-      background: transparent;
-      border: none;
-      font-size: 1.15rem;
-      cursor: pointer;
-      padding: 0.4rem;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .btn-action-small { background: transparent; border: none; font-size: 1.15rem; cursor: pointer; padding: 0.4rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
     .btn-edit-card { color: #4b5563; }
-    .btn-edit-card:active { background: #e5e7eb; }
     .btn-delete-card { color: #ef4444; font-size: 1.35rem; }
-    .btn-delete-card:active { background: #fee2e2; }
 
     ul#items-list { list-style: none; padding: 0; margin: 0; position: relative; }
     li.item-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 0.5rem;
-      border-bottom: 1px solid #f3f4f6;
-      gap: 0.6rem;
-      background: #fff;
-      border-radius: 10px;
-      
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-touch-callout: none;
-      
-      touch-action: pan-y;
-      cursor: grab;
+      display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid #f3f4f6; gap: 0.6rem; background: #fff; border-radius: 10px;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y; cursor: grab;
       transition: background 0.15s, transform 0.15s, box-shadow 0.15s, opacity 0.2s;
     }
     li.item-row:active { cursor: grabbing; }
     li.item-row.is-done { opacity: 0.55; cursor: default; }
-    
-    li.item-row.is-dragging {
-      background: #eff6ff;
-      border: 1.5px dashed #2563eb;
-      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
-      transform: scale(1.02);
-      z-index: 40;
-    }
+    li.item-row.is-dragging { background: #eff6ff; border: 1.5px dashed #2563eb; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25); transform: scale(1.02); z-index: 40; }
 
-    .checkbox-btn {
-      background: transparent;
-      border: none;
-      padding: 0.35rem 0.5rem 0.35rem 0.2rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .checkbox-btn input[type="checkbox"] {
-      width: 1.35rem;
-      height: 1.35rem;
-      cursor: pointer;
-      border-radius: 6px;
-      pointer-events: none;
-    }
+    .checkbox-btn { background: transparent; border: none; padding: 0.35rem 0.5rem 0.35rem 0.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .checkbox-btn input[type="checkbox"] { width: 1.35rem; height: 1.35rem; cursor: pointer; border-radius: 6px; pointer-events: none; }
 
     .item-content { display: flex; align-items: center; gap: 0.45rem; flex: 1; min-width: 0; flex-wrap: wrap; }
     .item-name { font-size: 1.05rem; color: #1f2937; word-break: break-word; }
-    .item-qty-badge {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #2563eb;
-      background: #eff6ff;
-      padding: 0.1rem 0.45rem;
-      border-radius: 6px;
-      flex-shrink: 0;
-    }
+    .item-qty-badge { font-size: 0.8rem; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 0.1rem 0.45rem; border-radius: 6px; flex-shrink: 0; }
     .is-done .item-qty-badge { background: #f3f4f6; color: #9ca3af; }
     .done { text-decoration: line-through; color: #9ca3af; }
 
     .item-actions { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; }
     .btn-item-edit { color: #6b7280; font-size: 1rem; }
-    .btn-item-edit:active { background: #e5e7eb; }
     .btn-delete-item { color: #ef4444; font-size: 1.4rem; padding: 0.2rem 0.4rem; }
 
     .summary-card {
-      margin-top: 1.25rem;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 0.75rem 0.5rem;
-      display: flex;
-      justify-content: space-evenly;
-      align-items: center;
-      text-align: center;
+      margin-top: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+      padding: 0.75rem 0.5rem; display: flex; justify-content: space-evenly; align-items: center; text-align: center;
     }
     .summary-item { display: flex; flex-direction: column; gap: 0.15rem; }
-    .summary-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
+    .summary-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
     .summary-value { font-size: 1.15rem; font-weight: 700; color: #0f172a; }
     .summary-value.total { color: #334155; }
     .summary-value.to-buy { color: #2563eb; }
@@ -201,51 +100,19 @@
     .summary-divider { width: 1px; height: 26px; background: #cbd5e1; }
 
     .list-footer { margin-top: 1.25rem; text-align: center; }
-    .btn-clear-all {
-      background: #fee2e2;
-      color: #b91c1c;
-      border: none;
-      padding: 0.65rem 1.25rem;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-clear-all:active { background: #fecaca; }
+    .btn-clear-all { background: #fee2e2; color: #b91c1c; border: none; padding: 0.65rem 1.25rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
     .btn-clear-all:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-      z-index: 100;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.45);
+      display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 100;
     }
     .modal-overlay.hidden { display: none; }
-    .modal-box {
-      background: #fff;
-      border-radius: 16px;
-      padding: 1.5rem;
-      max-width: 360px;
-      width: 100%;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      text-align: center;
-    }
+    .modal-box { background: #fff; border-radius: 16px; padding: 1.5rem; max-width: 360px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
     .modal-box h3 { margin-top: 0; font-size: 1.25rem; color: #111827; }
     .modal-box p { color: #6b7280; font-size: 0.95rem; margin-bottom: 1.25rem; }
     .modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
-    .modal-btn {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-    }
+    .modal-btn { flex: 1; padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; }
     .btn-cancel { background: #f3f4f6; color: #374151; }
     .btn-confirm-delete { background: #ef4444; color: #ffffff; }
 
@@ -434,10 +301,8 @@
     startDashboardListener();
   }
 
-  // --- NATIVE HISTORY OPLOSSING ---
+  // --- SCHOON EN STABIEL (GEEN GESCHIEDENIS MANIPULATIE) ---
   function openList(listId, listName) {
-    if (activeListId === listId) return; // Voorkom dubbel klikken
-
     activeListId = listId;
     activeListName = listName;
     document.getElementById("active-list-title").textContent = listName;
@@ -445,33 +310,43 @@
     dashboardView.classList.add("hidden");
     detailView.classList.remove("hidden");
 
-    // We pushen veilig één stap. Doordat het manifest nu klopt, crasht dit niet meer!
-    history.pushState({ view: "list" }, "");
-
     listenToItems(listId);
   }
 
-  // Luister naar de fysieke swipe / Android back knop
+  function goBackToDashboard() {
+    if (unsubscribeItems) unsubscribeItems();
+    activeListId = null;
+    detailView.classList.add("hidden");
+    dashboardView.classList.remove("hidden");
+    
+    // Sluit openstaande modale vensters direct
+    document.getElementById("confirm-modal").classList.add("hidden");
+    document.getElementById("prompt-modal").classList.add("hidden");
+    onConfirmCallback = null;
+    onPromptCallback = null;
+  }
+
+  // De knop in de app brengt je direct terug naar het dashboard zonder browser-fouten
+  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
+    goBackToDashboard();
+  });
+
+  // Als je op Android op terug swipet terwijl je in een lijst zit, gaan we netjes naar het dashboard.
+  // Zit je al op het dashboard? Dan bemoeien we ons er niet mee, en sluit Android de app direct netjes af.
   window.addEventListener("popstate", (e) => {
-    // Als de state leeg is, of de state is niet "list", gaan we naar dashboard
-    if (!e.state || e.state.view !== "list") {
-      if (!detailView.classList.contains("hidden")) {
-        if (unsubscribeItems) unsubscribeItems();
-        activeListId = null;
-        detailView.classList.add("hidden");
-        dashboardView.classList.remove("hidden");
-        
-        // Modal veiligheidscheck
-        document.getElementById("confirm-modal").classList.add("hidden");
-        document.getElementById("prompt-modal").classList.add("hidden");
-      }
+    if (!detailView.classList.contains("hidden")) {
+      goBackToDashboard();
+      // Duw de geschiedenis meteen weer recht zodat Android op de dashboard-laag blijft
+      history.pushState(null, "");
     }
   });
 
-  // De UI-knop vuurt nu simpelweg een history.back af, net als je Android knop
-  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    history.back();
-  });
+  // Bij het openen van een lijst zetten we een anker in de geschiedenis zodat de eerste swipe naar het dashboard leidt
+  const originalOpenList = openList;
+  openList = function(listId, listName) {
+    history.pushState({ view: "list" }, "");
+    originalOpenList(listId, listName);
+  };
 
 
   // --- AUTOCOMPLETE PRODUCTEN ---
@@ -657,7 +532,7 @@
           ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
         </div>
         <div class="item-actions">
-          <button class="btn-action-small btn-item-edit">✏️️</button>
+          <button class="btn-action-small btn-item-edit">✏️</button>
           <button class="btn-action-small btn-delete-item">&times;</button>
         </div>
       `;
@@ -690,14 +565,14 @@
   }
 
   function attachTouchInteractions(li, item) {
-    let pressTimer = null, isLongPress = false, startY = 0, startX = 0;
+    let pressTimer = null, startY = 0, startX = 0;
 
     li.addEventListener("touchstart", (e) => {
       if (e.target.closest(".item-actions") || e.target.closest(".checkbox-btn")) return;
-      startY = e.touches[0].clientY; startX = e.touches[0].clientX; isLongPress = false;
+      startY = e.touches[0].clientY; startX = e.touches[0].clientX;
       pressTimer = setTimeout(() => {
         if (item.completed) return;
-        isLongPress = true; isDraggingActive = true;
+        isDraggingActive = true;
         if (navigator.vibrate) navigator.vibrate(40);
         li.classList.add("is-dragging");
         initMobileTouchMove(li);
@@ -792,7 +667,6 @@
     });
   });
 
-  // --- MODALS ---
   const confirmModalEl = document.getElementById("confirm-modal");
   let onConfirmCallback = null;
   function openConfirmModal(title, message, onConfirm) {
@@ -814,6 +688,7 @@
     if (currentQty !== null) { document.getElementById("prompt-qty-wrapper").style.display = "block"; promptQtyInput.value = currentQty; } 
     else document.getElementById("prompt-qty-wrapper").style.display = "none";
     onPromptCallback = onSave;
+    promptModalEl.classList.add("hidden");
     promptModalEl.classList.remove("hidden");
     setTimeout(() => { promptInput.focus(); promptInput.select(); }, 50);
   }
