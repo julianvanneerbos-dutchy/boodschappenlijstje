@@ -114,78 +114,85 @@
     .btn-delete-card { color: #ef4444; font-size: 1.35rem; }
     .btn-delete-card:active { background: #fee2e2; }
 
-    /* Lijst items */
-    ul#items-list { list-style: none; padding: 0; margin: 0; }
+    /* Lijst items & Drag and Drop */
+    ul#items-list { 
+      list-style: none; 
+      padding: 0; 
+      margin: 0; 
+      position: relative;
+    }
     li.item-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.75rem 0.4rem;
+      padding: 0.85rem 0.5rem;
       border-bottom: 1px solid #f3f4f6;
-      gap: 0.4rem;
-      transition: opacity 0.2s;
+      gap: 0.6rem;
+      background: #fff;
+      border-radius: 10px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+      transition: background 0.15s, transform 0.15s, box-shadow 0.15s, opacity 0.2s;
     }
     li.item-row.is-done { opacity: 0.55; }
-    .item-left { display: flex; align-items: center; gap: 0.6rem; flex: 1; cursor: pointer; user-select: none; min-width: 0; }
-    .item-left input[type="checkbox"] { width: 1.3rem; height: 1.3rem; cursor: pointer; border-radius: 6px; flex-shrink: 0; }
-    .item-name-group { display: flex; align-items: center; gap: 0.35rem; overflow: hidden; }
-    .item-name { font-size: 1.02rem; color: #1f2937; word-break: break-word; }
-    .done { text-decoration: line-through; color: #9ca3af; }
+    
+    /* Dragging toestand */
+    li.item-row.is-dragging {
+      background: #eff6ff;
+      border: 1.5px dashed #2563eb;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+      transform: scale(1.02);
+      z-index: 40;
+    }
 
-    /* Aantal stepper (- 1 +) */
-    .qty-stepper {
-      display: inline-flex;
-      align-items: center;
-      background: #f3f4f6;
-      border-radius: 8px;
-      padding: 0.15rem 0.25rem;
-      gap: 0.15rem;
-      flex-shrink: 0;
+    .item-left { 
+      display: flex; 
+      align-items: center; 
+      gap: 0.65rem; 
+      flex: 1; 
+      cursor: pointer; 
+      min-width: 0; 
     }
-    .qty-btn {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      color: #374151;
-      width: 1.6rem;
-      height: 1.6rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      line-height: 1;
+    .item-left input[type="checkbox"] { 
+      width: 1.35rem; 
+      height: 1.35rem; 
+      cursor: pointer; 
+      border-radius: 6px; 
+      flex-shrink: 0; 
+      pointer-events: none; /* Kliks vangen we direct op de hele regel af */
     }
-    .qty-btn:active { background: #e5e7eb; }
-    .qty-label {
-      font-size: 0.85rem;
+    .item-name-group { 
+      display: flex; 
+      align-items: center; 
+      gap: 0.45rem; 
+      overflow: hidden; 
+      flex-wrap: wrap; 
+    }
+    .item-name { 
+      font-size: 1.05rem; 
+      color: #1f2937; 
+      word-break: break-word; 
+    }
+    .item-qty-badge {
+      font-size: 0.8rem;
       font-weight: 700;
       color: #2563eb;
-      min-width: 1.7rem;
-      text-align: center;
+      background: #eff6ff;
+      padding: 0.1rem 0.45rem;
+      border-radius: 6px;
+      flex-shrink: 0;
     }
-    .is-done .qty-label { color: #9ca3af; }
+    .is-done .item-qty-badge {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+    .done { text-decoration: line-through; color: #9ca3af; }
 
     .item-actions { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; }
-    .btn-move {
-      background: #f3f4f6;
-      border: none;
-      color: #6b7280;
-      width: 1.85rem;
-      height: 1.85rem;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.7rem;
-    }
-    .btn-move:active { background: #e5e7eb; color: #111827; }
-    .btn-move:disabled { opacity: 0.25; cursor: not-allowed; }
-    .btn-item-edit { color: #6b7280; font-size: 0.9rem; }
+    .btn-item-edit { color: #6b7280; font-size: 1rem; }
     .btn-item-edit:active { background: #e5e7eb; }
-    .btn-delete-item { color: #ef4444; font-size: 1.3rem; padding: 0.15rem 0.35rem; }
+    .btn-delete-item { color: #ef4444; font-size: 1.4rem; padding: 0.2rem 0.4rem; }
 
     /* Statistiekenbalk onderaan */
     .summary-card {
@@ -656,11 +663,17 @@
     });
   }
 
+  // --- RENDEREN & DRAG & DROP LOGICA ---
+  let isDraggingActive = false;
+
   function renderItems() {
+    // Voorkom dat realtime updates de drag-beweging onderbreken
+    if (isDraggingActive) return;
+
     const listEl = document.getElementById("items-list");
     listEl.innerHTML = "";
 
-    // Sorteren: actieve items eerst (op order), afgevinkte items onderaan
+    // Sorteren: actieve items eerst, afgevinkt onderaan
     const sorted = [...currentItems].sort((a, b) => {
       if (a.completed === b.completed) {
         return (a.order ?? 0) - (b.order ?? 0);
@@ -668,76 +681,30 @@
       return a.completed ? 1 : -1;
     });
 
-    sorted.forEach((item, index) => {
+    sorted.forEach((item) => {
       const li = document.createElement("li");
       li.className = `item-row ${item.completed ? 'is-done' : ''}`;
+      li.dataset.id = item.id;
+      li.dataset.completed = item.completed ? "true" : "false";
 
       li.innerHTML = `
         <div class="item-left">
           <input type="checkbox" ${item.completed ? "checked" : ""}>
           <div class="item-name-group">
             <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
+            ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
           </div>
         </div>
-        <div class="qty-stepper">
-          <button class="qty-btn btn-qty-minus" title="Minder">−</button>
-          <span class="qty-label">${item.qty ?? 1}x</span>
-          <button class="qty-btn btn-qty-plus" title="Meer">+</button>
-        </div>
         <div class="item-actions">
-          <button class="btn-move btn-up" ${index === 0 || item.completed ? "disabled" : ""} title="Omhoog">▲</button>
-          <button class="btn-move btn-down" ${index === sorted.length - 1 || item.completed ? "disabled" : ""} title="Omlaag">▼</button>
           <button class="btn-action-small btn-item-edit" title="Bewerken">✏️</button>
           <button class="btn-action-small btn-delete-item" title="Verwijderen">&times;</button>
         </div>
       `;
 
-      // Afvinken
-      li.querySelector(".item-left").addEventListener("click", () => {
-        const itemRef = doc(db, "lists", activeListId, "items", item.id);
-        updateDoc(itemRef, { completed: !item.completed });
-      });
+      // Korte tik vs Long press op de regel
+      attachRowInteractions(li, item);
 
-      // Aantal verlagen (-)
-      li.querySelector(".btn-qty-minus").addEventListener("click", (e) => {
-        e.stopPropagation();
-        const currentQty = item.qty ?? 1;
-        if (currentQty > 1) {
-          const itemRef = doc(db, "lists", activeListId, "items", item.id);
-          updateDoc(itemRef, { qty: currentQty - 1 });
-        } else {
-          openConfirmModal(
-            `'${item.name}' verwijderen?`,
-            "Het aantal is 0. Wil je dit product van de lijst halen?",
-            () => {
-              const itemRef = doc(db, "lists", activeListId, "items", item.id);
-              deleteDoc(itemRef);
-            }
-          );
-        }
-      });
-
-      // Aantal verhogen (+)
-      li.querySelector(".btn-qty-plus").addEventListener("click", (e) => {
-        e.stopPropagation();
-        const currentQty = item.qty ?? 1;
-        const itemRef = doc(db, "lists", activeListId, "items", item.id);
-        updateDoc(itemRef, { qty: currentQty + 1 });
-      });
-
-      // Omhoog
-      li.querySelector(".btn-up").addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (index > 0) swapOrder(sorted[index], sorted[index - 1]);
-      });
-
-      // Omlaag
-      li.querySelector(".btn-down").addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (index < sorted.length - 1) swapOrder(sorted[index], sorted[index + 1]);
-      });
-
-      // Hernoemen item + aantal aanpassen
+      // Hernoemen item & aantal via potloodje
       li.querySelector(".btn-item-edit").addEventListener("click", (e) => {
         e.stopPropagation();
         openPromptModal("Product aanpassen", item.name, item.qty ?? 1, async (newName, newQty) => {
@@ -749,7 +716,7 @@
         });
       });
 
-      // Verwijderen
+      // Verwijderen item
       li.querySelector(".btn-delete-item").addEventListener("click", (e) => {
         e.stopPropagation();
         const itemRef = doc(db, "lists", activeListId, "items", item.id);
@@ -760,17 +727,146 @@
     });
   }
 
-  async function swapOrder(item1, item2) {
-    const batch = writeBatch(db);
-    const ref1 = doc(db, "lists", activeListId, "items", item1.id);
-    const ref2 = doc(db, "lists", activeListId, "items", item2.id);
+  function attachRowInteractions(li, item) {
+    let pressTimer = null;
+    let isLongPress = false;
+    let startY = 0;
+    let startX = 0;
+    const PRESS_DURATION = 250; // 250ms = responsieve long press
 
-    batch.update(ref1, { order: item2.order ?? 0 });
-    batch.update(ref2, { order: item1.order ?? 0 });
-    await batch.commit();
+    const startPress = (e) => {
+      // Negeer als er op knopjes geklikt wordt
+      if (e.target.closest(".item-actions")) return;
+
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      startY = clientY;
+      startX = clientX;
+      isLongPress = false;
+
+      pressTimer = setTimeout(() => {
+        // Alleen actieve (niet-afgevinkte) items sorteren via drag & drop
+        if (item.completed) return;
+
+        isLongPress = true;
+        isDraggingActive = true;
+        if (navigator.vibrate) navigator.vibrate(40); // Voelbare haptic tik
+        li.classList.add("is-dragging");
+
+        initDragMove(li, clientY);
+      }, PRESS_DURATION);
+    };
+
+    const cancelPress = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    };
+
+    // Touch events
+    li.addEventListener("touchstart", startPress, { passive: true });
+    li.addEventListener("touchmove", (e) => {
+      const clientY = e.touches[0].clientY;
+      const clientX = e.touches[0].clientX;
+      // Als vinger meer dan 8px beweegt vóór 250ms, is het normaal scrollen
+      if (!isLongPress && (Math.hypot(clientX - startX, clientY - startY) > 8)) {
+        cancelPress();
+      }
+    }, { passive: true });
+    li.addEventListener("touchend", (e) => {
+      cancelPress();
+      if (!isLongPress) {
+        // Korte tik = afvinken
+        if (!e.target.closest(".item-actions")) {
+          const itemRef = doc(db, "lists", activeListId, "items", item.id);
+          updateDoc(itemRef, { completed: !item.completed });
+        }
+      }
+    });
+
+    // Muis events (voor desktop)
+    li.addEventListener("mousedown", startPress);
+    li.addEventListener("mouseleave", cancelPress);
+    li.addEventListener("mouseup", (e) => {
+      cancelPress();
+      if (!isLongPress) {
+        if (!e.target.closest(".item-actions")) {
+          const itemRef = doc(db, "lists", activeListId, "items", item.id);
+          updateDoc(itemRef, { completed: !item.completed });
+        }
+      }
+    });
   }
 
-  // Nieuw item toevoegen (standaard qty: 1)
+  // --- SLEPEN EN HERORDENEN ---
+  function initDragMove(draggedLi, initialY) {
+    const listEl = document.getElementById("items-list");
+
+    const onMove = (e) => {
+      if (!isDraggingActive) return;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      // Zoek het element onder de vinger/cursor
+      const afterElement = getDragAfterElement(listEl, clientY);
+      if (afterElement == null) {
+        // Alleen invoegen vóór afgevinkte items (afgevinkt blijft altijd onderaan)
+        const firstDone = listEl.querySelector("li.item-row.is-done");
+        if (firstDone) {
+          listEl.insertBefore(draggedLi, firstDone);
+        } else {
+          listEl.appendChild(draggedLi);
+        }
+      } else {
+        listEl.insertBefore(draggedLi, afterElement);
+      }
+    };
+
+    const onEnd = async () => {
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onEnd);
+
+      draggedLi.classList.remove("is-dragging");
+      isDraggingActive = false;
+
+      // Nieuwe volgorde opslaan in Firebase Firestore
+      const rows = [...listEl.querySelectorAll("li.item-row:not(.is-done)")];
+      const batch = writeBatch(db);
+
+      rows.forEach((row, idx) => {
+        const id = row.dataset.id;
+        const ref = doc(db, "lists", activeListId, "items", id);
+        batch.update(ref, { order: idx + 1 });
+      });
+
+      await batch.commit();
+      renderItems();
+    };
+
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+  }
+
+  function getDragAfterElement(container, y) {
+    // Alleen vergelijken met niet-afgevinkte items die niet versleept worden
+    const draggableElements = [...container.querySelectorAll("li.item-row:not(.is-dragging):not(.is-done)")];
+
+    return draggableElements.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset: offset, element: child };
+      } else {
+        return closest;
+      }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  // Nieuw item toevoegen (standaard 1)
   document.getElementById("add-item-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = inputEl.value.trim();
@@ -783,7 +879,7 @@
     const itemsCol = collection(db, "lists", activeListId, "items");
     await addDoc(itemsCol, {
       name: name,
-      qty: 1, // Standaard aantal is 1
+      qty: 1,
       completed: false,
       order: nextOrder,
       createdAt: serverTimestamp()
@@ -793,6 +889,7 @@
     suggestionsEl.style.display = "none";
   });
 
+  // Alle producten van actieve lijst wissen
   document.getElementById("btn-open-clear-items").addEventListener("click", () => {
     openConfirmModal(
       `Alle producten wissen?`,
