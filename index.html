@@ -463,8 +463,49 @@
 
   function unlockApp() {
     authView.classList.add("hidden");
+    // Startscherm laden, we manipuleren GEEN URL en GEEN geschiedenis. 100% clean.
     dashboardView.classList.remove("hidden");
     startDashboardListener();
+  }
+
+  // --- 100% CLEAN HISTORY LOGICA (GEEN URL HASHS, GEEN BUGS) ---
+  
+  // De <- Overzicht knop triggert simpelweg de browser 'Terug' functie
+  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
+    history.back(); 
+  });
+
+  // Vang de Terug-actie af (zowel fysieke swipe als onze eigen UI knop)
+  window.addEventListener("popstate", (e) => {
+    // e.state is leeg als we terug bij het absolute startpunt van de app (dashboard) zijn
+    if (!e.state) {
+      if (!detailView.classList.contains("hidden")) {
+        if (unsubscribeItems) unsubscribeItems();
+        activeListId = null;
+        detailView.classList.add("hidden");
+        dashboardView.classList.remove("hidden");
+        
+        // Verberg direct eventuele zwevende venstertjes voor de veiligheid
+        document.getElementById("confirm-modal").classList.add("hidden");
+        document.getElementById("prompt-modal").classList.add("hidden");
+        onConfirmCallback = null;
+        onPromptCallback = null;
+      }
+    }
+  });
+
+  function openList(listId, listName) {
+    activeListId = listId;
+    activeListName = listName;
+    document.getElementById("active-list-title").textContent = listName;
+
+    dashboardView.classList.add("hidden");
+    detailView.classList.remove("hidden");
+
+    // Push een *onzichtbare* stap. We veranderen de URL niet, we zetten alleen een state-object.
+    history.pushState({ view: "list" }, "", "");
+
+    listenToItems(listId);
   }
 
   // --- AUTOCOMPLETE PRODUCTEN (products.json) ---
@@ -547,7 +588,7 @@
             <span id="count-${listId}">Laden...</span>
           </div>
           <div class="card-actions">
-            <button class="btn-action-small btn-edit-card" title="Lijst hernoemen">✏️️</button>
+            <button class="btn-action-small btn-edit-card" title="Lijst hernoemen">✏️</button>
             <button class="btn-action-small btn-delete-card" title="Lijst verwijderen">&times;</button>
           </div>
         `;
@@ -570,7 +611,7 @@
           }
         });
 
-        // Bij klikken roepen we openList aan met de veilige history methode
+        // Roep direct de openList functie aan
         li.addEventListener("click", () => openList(listId, data.name));
 
         li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
@@ -612,50 +653,6 @@
     });
     input.value = "";
   });
-
-  // --- DETAIL: EEN GEOPENDE LIJST & HISTORY API ---
-  function openList(listId, listName) {
-    activeListId = listId;
-    activeListName = listName;
-    document.getElementById("active-list-title").textContent = listName;
-
-    dashboardView.classList.add("hidden");
-    detailView.classList.remove("hidden");
-
-    // We pushen een onzichtbare stap ZONDER de URL te wijzigen
-    history.pushState({ view: "detail" }, "");
-
-    listenToItems(listId);
-  }
-
-  function goBackToDashboard() {
-    if (unsubscribeItems) unsubscribeItems();
-    activeListId = null;
-    detailView.classList.add("hidden");
-    dashboardView.classList.remove("hidden");
-    
-    // Sluit direct zwevende modals af (veiligheid)
-    document.getElementById("confirm-modal").classList.add("hidden");
-    document.getElementById("prompt-modal").classList.add("hidden");
-    onConfirmCallback = null;
-    onPromptCallback = null;
-  }
-
-  // De visuele terug-knop (<- Overzicht) simuleert simpelweg een hardware back knop
-  document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
-    history.back(); 
-  });
-
-  // DE MAGIE: Popstate vangt zowel de swipe als de knop netjes af
-  window.addEventListener("popstate", (e) => {
-    // Als de state leeg is (wat hij op het dashboard altijd is!), dan gaan we naar het dashboard
-    if (!e.state) {
-      if (!detailView.classList.contains("hidden")) {
-        goBackToDashboard();
-      }
-    }
-  });
-
 
   function listenToItems(listId) {
     if (unsubscribeItems) unsubscribeItems();
