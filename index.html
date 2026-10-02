@@ -42,48 +42,48 @@
       color: var(--text-main);
     }
 
-    body { padding: 1rem; }
+    body { padding: 0.75rem; }
 
     .container {
       width: 100%;
       max-width: 480px;
       background: var(--surface);
-      border-radius: 24px;
-      padding: 1.5rem;
+      border-radius: 20px;
+      padding: 1.25rem 1rem;
       box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
       height: fit-content;
       max-height: 100%;
       overflow-y: auto;
     }
     
-    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    h1 { font-size: 1.35rem; font-weight: 700; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; }
     
     .btn-icon {
       background: var(--bg);
       border: 1px solid var(--border);
-      padding: 0.5rem 0.75rem;
-      border-radius: 12px;
+      padding: 0.45rem 0.7rem;
+      border-radius: 10px;
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.9rem;
+      gap: 0.35rem;
+      font-size: 0.85rem;
       transition: all 0.15s ease;
     }
     .btn-icon:active { transform: scale(0.96); background: #e2e8f0; }
 
     /* Invoervelden & knoppen */
     .input-wrapper { position: relative; width: 100%; }
-    .input-row { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .input-row { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
     
     input[type="text"], input[type="password"], input[type="number"] {
       width: 100%;
-      padding: 0.85rem 1.1rem;
+      padding: 0.75rem 1rem;
       border: 1.5px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       font-size: 0.95rem;
       outline: none;
       background: #fafafa;
@@ -93,21 +93,21 @@
     input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
       border-color: var(--primary);
       background: #ffffff;
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     button.btn-primary {
       background: var(--primary);
       color: #fff;
       border: none;
-      border-radius: 14px;
-      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      padding: 0.75rem 1.15rem;
       font-weight: 600;
       cursor: pointer;
       font-size: 0.95rem;
       white-space: nowrap;
       transition: all 0.15s ease;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+      box-shadow: 0 3px 10px rgba(79, 70, 229, 0.25);
     }
     button.btn-primary:active { transform: scale(0.97); background: var(--primary-hover); }
 
@@ -133,32 +133,32 @@
       right: 0;
       background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       max-height: 220px;
       overflow-y: auto;
       z-index: 50;
       list-style: none;
-      padding: 0.4rem;
+      padding: 0.3rem;
       margin: 0;
       display: none;
     }
     .suggestions-list li {
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 0.85rem;
       cursor: pointer;
-      font-size: 0.95rem;
-      border-radius: 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
       transition: background 0.15s ease;
     }
     .suggestions-list li:hover, .suggestions-list li:active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
 
     /* Dashboard kaarten */
-    ul.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    ul.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
     li.list-card {
       background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      padding: 0.85rem 1rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -168,58 +168,58 @@
     }
     li.list-card:active { transform: scale(0.98); background: var(--bg); }
     .card-info { flex: 1; overflow: hidden; padding-right: 0.5rem; }
-    .card-info h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-info span { font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 0.2rem; }
+    .card-info h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-info span { font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.15rem; }
     
-    .card-actions { display: flex; align-items: center; gap: 0.3rem; }
+    .card-actions { display: flex; align-items: center; gap: 0.2rem; }
 
     /* Moderne vector actieknoppen */
     .btn-action-icon {
       background: transparent;
       border: none;
       cursor: pointer;
-      padding: 0.45rem;
-      border-radius: 10px;
+      padding: 0.35rem;
+      border-radius: 8px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       color: var(--text-muted);
       transition: all 0.15s ease;
     }
-    .btn-action-icon svg { width: 18px; height: 18px; stroke-width: 2.2; }
+    .btn-action-icon svg { width: 17px; height: 17px; stroke-width: 2.2; }
     .btn-action-icon:hover, .btn-action-icon:active { background: #f1f5f9; color: var(--text-main); }
     .btn-action-icon.danger:hover, .btn-action-icon.danger:active { background: var(--danger-light); color: var(--danger); }
 
-    /* Lijst items */
-    ul#items-list { list-style: none; padding: 0; margin: 0; position: relative; display: flex; flex-direction: column; gap: 0.4rem; }
+    /* Compacte lijst items */
+    ul#items-list { list-style: none; padding: 0; margin: 0; position: relative; display: flex; flex-direction: column; gap: 0.3rem; }
     li.item-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.65rem 0.6rem 0.65rem 0.4rem;
+      padding: 0.45rem 0.5rem 0.45rem 0.35rem;
       background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 11px;
       user-select: none;
       touch-action: pan-y;
       cursor: grab;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
     li.item-row:active { cursor: grabbing; }
-    li.item-row.is-done { opacity: 0.55; background: #fafafa; border-color: #f1f5f9; cursor: default; }
+    li.item-row.is-done { opacity: 0.5; background: #fafafa; border-color: #f1f5f9; cursor: default; }
     li.item-row.is-dragging {
       background: var(--primary-light);
       border: 1.5px dashed var(--primary);
-      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
-      transform: scale(1.02);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+      transform: scale(1.015);
       z-index: 40;
     }
 
-    /* Custom Moderne Checkbox */
+    /* Custom Checkbox */
     .checkbox-btn {
       background: transparent;
       border: none;
-      padding: 0.4rem;
+      padding: 0.25rem 0.35rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -227,18 +227,18 @@
       flex-shrink: 0;
     }
     .custom-checkbox {
-      width: 22px;
-      height: 22px;
-      border: 2px solid #cbd5e1;
-      border-radius: 8px;
+      width: 20px;
+      height: 20px;
+      border: 1.8px solid #cbd5e1;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
     }
     .custom-checkbox svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       stroke: white;
       stroke-width: 3;
       stroke-dasharray: 20;
@@ -251,50 +251,50 @@
     }
     .is-done .custom-checkbox svg { stroke-dashoffset: 0; }
 
-    .item-content { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; margin-left: 0.2rem; }
-    .item-name { font-size: 0.95rem; font-weight: 500; color: var(--text-main); word-break: break-word; }
+    .item-content { display: flex; align-items: center; gap: 0.4rem; flex: 1; min-width: 0; margin-left: 0.15rem; }
+    .item-name { font-size: 0.92rem; font-weight: 500; color: var(--text-main); word-break: break-word; line-height: 1.25; }
     .item-qty-badge {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       color: var(--primary);
       background: var(--primary-light);
-      padding: 0.15rem 0.5rem;
+      padding: 0.1rem 0.45rem;
       border-radius: 9999px;
       flex-shrink: 0;
     }
     .is-done .item-qty-badge { background: #e2e8f0; color: var(--text-muted); }
     .done { text-decoration: line-through; color: var(--text-muted); }
 
-    .item-actions { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; }
+    .item-actions { display: flex; align-items: center; gap: 0.1rem; flex-shrink: 0; }
 
     /* Statistiekenbalk */
     .summary-card {
-      margin-top: 1.25rem;
+      margin-top: 1rem;
       background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 0.85rem 0.5rem;
+      border-radius: 14px;
+      padding: 0.7rem 0.5rem;
       display: flex;
       justify-content: space-evenly;
       align-items: center;
       text-align: center;
     }
-    .summary-item { display: flex; flex-direction: column; gap: 0.2rem; }
-    .summary-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
-    .summary-value { font-size: 1.15rem; font-weight: 800; color: var(--text-main); }
+    .summary-item { display: flex; flex-direction: column; gap: 0.15rem; }
+    .summary-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+    .summary-value { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
     .summary-value.to-buy { color: var(--primary); }
     .summary-value.in-cart { color: #16a34a; }
-    .summary-divider { width: 1px; height: 26px; background: #e2e8f0; }
+    .summary-divider { width: 1px; height: 22px; background: #e2e8f0; }
 
     /* Footer & Modals */
-    .list-footer { margin-top: 1.25rem; text-align: center; }
+    .list-footer { margin-top: 1rem; text-align: center; }
     .btn-clear-all {
       background: var(--danger-light);
       color: var(--danger);
       border: none;
-      padding: 0.65rem 1.25rem;
-      border-radius: 12px;
-      font-size: 0.9rem;
+      padding: 0.6rem 1.15rem;
+      border-radius: 10px;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -316,21 +316,21 @@
     .modal-overlay.hidden { display: none; }
     .modal-box {
       background: #ffffff;
-      border-radius: 20px;
-      padding: 1.5rem;
-      max-width: 360px;
+      border-radius: 18px;
+      padding: 1.4rem;
+      max-width: 340px;
       width: 100%;
       box-shadow: 0 20px 40px rgba(0,0,0,0.15);
       text-align: center;
     }
-    .modal-box h3 { margin-top: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
-    .modal-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.4; }
-    .modal-actions { display: flex; gap: 0.6rem; justify-content: center; }
+    .modal-box h3 { margin-top: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-main); }
+    .modal-box p { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.15rem; line-height: 1.4; }
+    .modal-actions { display: flex; gap: 0.5rem; justify-content: center; }
     .modal-btn {
       flex: 1;
-      padding: 0.75rem 1rem;
-      border-radius: 12px;
-      font-size: 0.95rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       border: none;
@@ -339,7 +339,7 @@
     .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
     .btn-confirm-delete { background: var(--danger); color: #ffffff; }
 
-    .empty-state { text-align: center; color: var(--text-muted); padding: 2.5rem 1rem; font-size: 0.9rem; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 2rem 1rem; font-size: 0.88rem; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -363,9 +363,9 @@
   <section id="view-dashboard" class="hidden">
     <header>
       <h1>Mijn Lijstjes 📋</h1>
-      <button id="btn-lock-app" class="btn-icon" title="Vergrendel app">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        Slot
+      <button id="btn-lock-app" class="btn-icon" title="Uitloggen">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Uitloggen
       </button>
     </header>
     
@@ -382,7 +382,7 @@
   <section id="view-list-detail" class="hidden">
     <header>
       <button id="btn-back-to-dashboard" class="btn-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         Overzicht
       </button>
       <h1 id="active-list-title" style="font-size: 1.15rem; text-align: right;">Lijst</h1>
@@ -419,7 +419,7 @@
 
     <div class="list-footer">
       <button id="btn-open-clear-items" class="btn-clear-all" disabled>
-        Lijst helemaal leegmaken
+        Lijst leegmaken
       </button>
     </div>
   </section>
@@ -441,17 +441,17 @@
 <div id="prompt-modal" class="modal-overlay hidden">
   <div class="modal-box">
     <h3 id="prompt-title">Product aanpassen</h3>
-    <div style="text-align: left; margin-bottom: 0.5rem;">
-      <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Naam</label>
-      <input type="text" id="prompt-input" style="margin-top: 0.25rem; margin-bottom: 0.75rem;" required>
+    <div style="text-align: left; margin-bottom: 0.4rem;">
+      <label style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Naam</label>
+      <input type="text" id="prompt-input" style="margin-top: 0.2rem; margin-bottom: 0.6rem;" required>
     </div>
-    <div id="prompt-qty-wrapper" style="text-align: left; margin-bottom: 1.25rem;">
-      <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Aantal</label>
-      <input type="number" id="prompt-qty-input" min="1" max="99" style="margin-top: 0.25rem;">
+    <div id="prompt-qty-wrapper" style="text-align: left; margin-bottom: 1.1rem;">
+      <label style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Aantal</label>
+      <input type="number" id="prompt-qty-input" min="1" max="99" style="margin-top: 0.2rem;">
     </div>
     <div class="modal-actions">
       <button id="btn-prompt-cancel" class="modal-btn btn-cancel">Annuleren</button>
-      <button id="btn-prompt-confirm" class="modal-btn btn-primary" style="padding: 0.75rem 1rem;">Opslaan</button>
+      <button id="btn-prompt-confirm" class="modal-btn btn-primary" style="padding: 0.7rem 0.9rem;">Opslaan</button>
     </div>
   </div>
 </div>
@@ -524,7 +524,6 @@
   let unsubscribeLists = null;
   let unsubscribeItems = null;
 
-  // Moderne SVG Icoontjes templates
   const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
   const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
