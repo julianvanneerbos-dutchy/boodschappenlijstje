@@ -1,0 +1,30 @@
+[
+  {
+    "version": "v1.4.0",
+    "date": "Oktober 2026",
+    "changes": [
+      "Changelog toegevoegd aan het dashboard.",
+      "Opmerkingen per lijstje kunnen toevoegen onderaan het scherm.",
+      "Google Analytics 4 geïntegreerd voor websitestatistieken."
+    ]
+  },
+  {
+    "version": "v1.3.0",
+    "date": "Oktober 2026",
+    "changes": [
+      "Volgorde van lijstjes op het dashboard aanpassen via slepen (zowel mobiel als desktop).",
+      "Strakkere, compacte weergave met minder witruimte.",
+      "Emoji-iconen vervangen door moderne vectoriconen.",
+      "Knoppen verduidelijkt ('Uitloggen' en 'Lijst leegmaken')."
+    ]
+  },
+  {
+    "version": "v1.2.0",
+    "date": "Oktober 2026",
+    "changes": [
+      "Overschakeling naar Firebase Authentication met pincode.",
+      "Firestore Security Rules ingesteld voor waterdichte beveiliging.",
+      "API-sleutel restricties geconfigureerd in Google Cloud."
+    ]
+  }
+]
