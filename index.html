@@ -10,109 +10,336 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Boodschappen">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#4f46e5">
 
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --surface: #ffffff;
+      --bg: #f8fafc;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+    }
+
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
-      background-color: #f3f4f6;
+      background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
       display: flex;
       justify-content: center;
       overscroll-behavior-y: none;
+      color: var(--text-main);
     }
 
-    body { padding: 1.25rem; }
-    .container { width: 100%; max-width: 480px; background: #fff; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); height: fit-content; max-height: 100%; overflow-y: auto; }
+    body { padding: 1rem; }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+      height: fit-content;
+      max-height: 100%;
+      overflow-y: auto;
+    }
     
     header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    h1 { font-size: 1.45rem; margin: 0; color: #111827; display: flex; align-items: center; gap: 0.5rem; }
+    h1 { font-size: 1.35rem; font-weight: 700; margin: 0; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; }
     
-    .btn-icon { background: #f3f4f6; border: none; padding: 0.5rem 0.75rem; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; }
-    .btn-icon:active { background: #e5e7eb; }
+    .btn-icon {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.75rem;
+      border-radius: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+    }
+    .btn-icon:active { transform: scale(0.96); background: #e2e8f0; }
 
+    /* Invoervelden & knoppen */
     .input-wrapper { position: relative; width: 100%; }
     .input-row { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
-    input[type="text"], input[type="password"], input[type="number"] { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid #d1d5db; border-radius: 12px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
-    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus { border-color: #2563eb; }
-    button.btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 12px; padding: 0.85rem 1.25rem; font-weight: 600; cursor: pointer; font-size: 1rem; white-space: nowrap; }
-    button.btn-primary:active { background: #1d4ed8; }
-
-    #view-auth { text-align: center; padding: 1.5rem 0; }
-    .auth-icon { font-size: 3rem; margin-bottom: 0.75rem; }
-    .auth-pin-input { letter-spacing: 0.5rem; font-size: 1.5rem; text-align: center; width: 180px; margin: 0 auto 1rem auto; display: block; }
-    .auth-error { color: #ef4444; font-size: 0.9rem; margin-top: 0.5rem; min-height: 1.2rem; }
-
-    .suggestions-list { position: absolute; top: 105%; left: 0; right: 0; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto; z-index: 50; list-style: none; padding: 0; margin: 0; display: none; }
-    .suggestions-list li { padding: 0.8rem 1rem; cursor: pointer; font-size: 1rem; border-bottom: 1px solid #f3f4f6; -webkit-tap-highlight-color: rgba(37, 99, 235, 0.1); }
-    .suggestions-list li:last-child { border-bottom: none; }
-    .suggestions-list li:hover, .suggestions-list li:active { background-color: #eff6ff; color: #2563eb; font-weight: 500; }
-
-    ul.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
-    li.list-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 14px; padding: 0.9rem 1.1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.15s ease; }
-    li.list-card:active { background: #eff6ff; border-color: #bfdbfe; }
-    .card-info { flex: 1; overflow: hidden; padding-right: 0.5rem; }
-    .card-info h3 { margin: 0; font-size: 1.1rem; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .card-info span { font-size: 0.85rem; color: #6b7280; display: block; margin-top: 0.15rem; }
     
-    .card-actions { display: flex; align-items: center; gap: 0.35rem; }
-    .btn-action-small { background: transparent; border: none; font-size: 1.15rem; cursor: pointer; padding: 0.4rem; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-    .btn-edit-card { color: #4b5563; }
-    .btn-edit-card:active { background: #e5e7eb; }
-    .btn-delete-card { color: #ef4444; font-size: 1.35rem; }
-    .btn-delete-card:active { background: #fee2e2; }
+    input[type="text"], input[type="password"], input[type="number"] {
+      width: 100%;
+      padding: 0.85rem 1.1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-size: 0.95rem;
+      outline: none;
+      background: #fafafa;
+      transition: all 0.2s ease;
+      color: var(--text-main);
+    }
+    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
 
-    ul#items-list { list-style: none; padding: 0; margin: 0; position: relative; }
-    li.item-row { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0.5rem; border-bottom: 1px solid #f3f4f6; gap: 0.6rem; background: #fff; border-radius: 10px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-y; cursor: grab; transition: background 0.15s, transform 0.15s, box-shadow 0.15s, opacity 0.2s; }
+    button.btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 0.85rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+    button.btn-primary:active { transform: scale(0.97); background: var(--primary-hover); }
+
+    /* Pincode Scherm */
+    #view-auth { text-align: center; padding: 2rem 0; }
+    .auth-icon { font-size: 3rem; margin-bottom: 0.75rem; }
+    .auth-pin-input {
+      letter-spacing: 0.6rem;
+      font-size: 1.6rem;
+      text-align: center;
+      width: 200px;
+      margin: 0 auto 1.25rem auto;
+      display: block;
+      font-weight: 700;
+    }
+    .auth-error { color: var(--danger); font-size: 0.9rem; margin-top: 0.75rem; min-height: 1.2rem; }
+
+    /* Autocomplete dropdown */
+    .suggestions-list {
+      position: absolute;
+      top: 105%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 50;
+      list-style: none;
+      padding: 0.4rem;
+      margin: 0;
+      display: none;
+    }
+    .suggestions-list li {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      border-radius: 10px;
+      transition: background 0.15s ease;
+    }
+    .suggestions-list li:hover, .suggestions-list li:active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+    /* Dashboard kaarten */
+    ul.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+    li.list-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    li.list-card:active { transform: scale(0.98); background: var(--bg); }
+    .card-info { flex: 1; overflow: hidden; padding-right: 0.5rem; }
+    .card-info h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-info span { font-size: 0.85rem; color: var(--text-muted); display: block; margin-top: 0.2rem; }
+    
+    .card-actions { display: flex; align-items: center; gap: 0.3rem; }
+
+    /* Moderne vector actieknoppen */
+    .btn-action-icon {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.45rem;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all 0.15s ease;
+    }
+    .btn-action-icon svg { width: 18px; height: 18px; stroke-width: 2.2; }
+    .btn-action-icon:hover, .btn-action-icon:active { background: #f1f5f9; color: var(--text-main); }
+    .btn-action-icon.danger:hover, .btn-action-icon.danger:active { background: var(--danger-light); color: var(--danger); }
+
+    /* Lijst items */
+    ul#items-list { list-style: none; padding: 0; margin: 0; position: relative; display: flex; flex-direction: column; gap: 0.4rem; }
+    li.item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 0.6rem 0.65rem 0.4rem;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      user-select: none;
+      touch-action: pan-y;
+      cursor: grab;
+      transition: all 0.2s ease;
+    }
     li.item-row:active { cursor: grabbing; }
-    li.item-row.is-done { opacity: 0.55; cursor: default; }
-    li.item-row.is-dragging { background: #eff6ff; border: 1.5px dashed #2563eb; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25); transform: scale(1.02); z-index: 40; }
+    li.item-row.is-done { opacity: 0.55; background: #fafafa; border-color: #f1f5f9; cursor: default; }
+    li.item-row.is-dragging {
+      background: var(--primary-light);
+      border: 1.5px dashed var(--primary);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+      transform: scale(1.02);
+      z-index: 40;
+    }
 
-    .checkbox-btn { background: transparent; border: none; padding: 0.35rem 0.5rem 0.35rem 0.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
-    .checkbox-btn input[type="checkbox"] { width: 1.35rem; height: 1.35rem; cursor: pointer; border-radius: 6px; pointer-events: none; }
+    /* Custom Moderne Checkbox */
+    .checkbox-btn {
+      background: transparent;
+      border: none;
+      padding: 0.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .custom-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .custom-checkbox svg {
+      width: 14px;
+      height: 14px;
+      stroke: white;
+      stroke-width: 3;
+      stroke-dasharray: 20;
+      stroke-dashoffset: 20;
+      transition: stroke-dashoffset 0.2s ease;
+    }
+    .is-done .custom-checkbox {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+    .is-done .custom-checkbox svg { stroke-dashoffset: 0; }
 
-    .item-content { display: flex; align-items: center; gap: 0.45rem; flex: 1; min-width: 0; flex-wrap: wrap; }
-    .item-name { font-size: 1.05rem; color: #1f2937; word-break: break-word; }
-    .item-qty-badge { font-size: 0.8rem; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 0.1rem 0.45rem; border-radius: 6px; flex-shrink: 0; }
-    .is-done .item-qty-badge { background: #f3f4f6; color: #9ca3af; }
-    .done { text-decoration: line-through; color: #9ca3af; }
+    .item-content { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; margin-left: 0.2rem; }
+    .item-name { font-size: 0.95rem; font-weight: 500; color: var(--text-main); word-break: break-word; }
+    .item-qty-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      flex-shrink: 0;
+    }
+    .is-done .item-qty-badge { background: #e2e8f0; color: var(--text-muted); }
+    .done { text-decoration: line-through; color: var(--text-muted); }
 
-    .item-actions { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; }
-    .btn-item-edit { color: #6b7280; font-size: 1rem; }
-    .btn-item-edit:active { background: #e5e7eb; }
-    .btn-delete-item { color: #ef4444; font-size: 1.4rem; padding: 0.2rem 0.4rem; }
+    .item-actions { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; }
 
-    .summary-card { margin-top: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.75rem 0.5rem; display: flex; justify-content: space-evenly; align-items: center; text-align: center; }
-    .summary-item { display: flex; flex-direction: column; gap: 0.15rem; }
-    .summary-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
-    .summary-value { font-size: 1.15rem; font-weight: 700; color: #0f172a; }
-    .summary-value.total { color: #334155; }
-    .summary-value.to-buy { color: #2563eb; }
+    /* Statistiekenbalk */
+    .summary-card {
+      margin-top: 1.25rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.85rem 0.5rem;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      text-align: center;
+    }
+    .summary-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .summary-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+    .summary-value { font-size: 1.15rem; font-weight: 800; color: var(--text-main); }
+    .summary-value.to-buy { color: var(--primary); }
     .summary-value.in-cart { color: #16a34a; }
-    .summary-divider { width: 1px; height: 26px; background: #cbd5e1; }
+    .summary-divider { width: 1px; height: 26px; background: #e2e8f0; }
 
+    /* Footer & Modals */
     .list-footer { margin-top: 1.25rem; text-align: center; }
-    .btn-clear-all { background: #fee2e2; color: #b91c1c; border: none; padding: 0.65rem 1.25rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
-    .btn-clear-all:active { background: #fecaca; }
+    .btn-clear-all {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-clear-all:active { transform: scale(0.97); background: #fee2e2; }
     .btn-clear-all:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 100;
+    }
     .modal-overlay.hidden { display: none; }
-    .modal-box { background: #fff; border-radius: 16px; padding: 1.5rem; max-width: 360px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
-    .modal-box h3 { margin-top: 0; font-size: 1.25rem; color: #111827; }
-    .modal-box p { color: #6b7280; font-size: 0.95rem; margin-bottom: 1.25rem; }
-    .modal-actions { display: flex; gap: 0.75rem; justify-content: center; }
-    .modal-btn { flex: 1; padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; }
-    .btn-cancel { background: #f3f4f6; color: #374151; }
-    .btn-confirm-delete { background: #ef4444; color: #ffffff; }
+    .modal-box {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 1.5rem;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    .modal-box h3 { margin-top: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main); }
+    .modal-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.4; }
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: center; }
+    .modal-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+    }
+    .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
+    .btn-confirm-delete { background: var(--danger); color: #ffffff; }
 
-    .empty-state { text-align: center; color: #9ca3af; padding: 2rem 0; font-size: 0.95rem; }
+    .empty-state { text-align: center; color: var(--text-muted); padding: 2.5rem 1rem; font-size: 0.9rem; }
     .hidden { display: none !important; }
   </style>
 </head>
@@ -122,12 +349,12 @@
   <!-- VIEW 0: PINCODE (Firebase Auth) -->
   <section id="view-auth">
     <div class="auth-icon">🔒</div>
-    <h2 style="margin: 0 0 0.5rem 0; color: #111827;">Voer toegangscode in</h2>
-    <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 1.5rem;">Deze lijst is privé beveiligd.</p>
+    <h2 style="margin: 0 0 0.4rem 0; color: var(--text-main); font-weight: 700;">Toegangscode</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Beveiligd gezinslijstje</p>
     
     <form id="auth-form" autocomplete="off">
       <input type="password" id="auth-pin" class="auth-pin-input" inputmode="numeric" maxlength="6" placeholder="••••••" required autofocus>
-      <button type="submit" class="btn-primary" style="width: 180px;">Ontgrendelen</button>
+      <button type="submit" class="btn-primary" style="width: 200px;">Ontgrendelen</button>
       <div id="auth-error" class="auth-error"></div>
     </form>
   </section>
@@ -136,11 +363,14 @@
   <section id="view-dashboard" class="hidden">
     <header>
       <h1>Mijn Lijstjes 📋</h1>
-      <button id="btn-lock-app" class="btn-icon" title="Vergrendel app">🔒</button>
+      <button id="btn-lock-app" class="btn-icon" title="Vergrendel app">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        Slot
+      </button>
     </header>
     
     <form id="add-list-form" class="input-row" autocomplete="off">
-      <input type="text" id="new-list-name" placeholder="Naam nieuw lijstje (bv. Albert Heijn)..." required>
+      <input type="text" id="new-list-name" placeholder="Nieuw lijstje (bv. Albert Heijn)..." required>
       <button type="submit" class="btn-primary">Aanmaken</button>
     </form>
 
@@ -151,42 +381,45 @@
   <!-- VIEW 2: INDIVIDUELE LIJST WEERGAVE -->
   <section id="view-list-detail" class="hidden">
     <header>
-      <button id="btn-back-to-dashboard" class="btn-icon">← Overzicht</button>
-      <h1 id="active-list-title" style="font-size: 1.25rem; text-align: right;">Lijst</h1>
+      <button id="btn-back-to-dashboard" class="btn-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Overzicht
+      </button>
+      <h1 id="active-list-title" style="font-size: 1.15rem; text-align: right;">Lijst</h1>
     </header>
 
     <form id="add-item-form" class="input-row" autocomplete="off">
       <div class="input-wrapper">
-        <input type="text" id="item-input" placeholder="Wat moeten we halen? (bv. Bananen)" required>
+        <input type="text" id="item-input" placeholder="Wat moeten we halen?" required>
         <ul id="suggestions" class="suggestions-list"></ul>
       </div>
       <button type="submit" class="btn-primary">Toevoegen</button>
     </form>
 
     <ul id="items-list"></ul>
-    <div id="items-empty" class="empty-state hidden">Lijst is leeg! Voeg hierboven een product toe.</div>
+    <div id="items-empty" class="empty-state hidden">Geen producten op deze lijst.</div>
 
     <!-- STATISTIEKENBALK ONDERAAN -->
     <div id="summary-container" class="summary-card hidden">
       <div class="summary-item">
         <span class="summary-label">Totaal</span>
-        <span id="summary-total" class="summary-value total">0</span>
+        <span id="summary-total" class="summary-value">0</span>
       </div>
       <div class="summary-divider"></div>
       <div class="summary-item">
-        <span class="summary-label">Nog te halen</span>
+        <span class="summary-label">Te halen</span>
         <span id="summary-to-buy" class="summary-value to-buy">0</span>
       </div>
       <div class="summary-divider"></div>
       <div class="summary-item">
         <span class="summary-label">In mandje</span>
-        <span id="summary-in-cart" class="summary-value in-cart">0 🛒</span>
+        <span id="summary-in-cart" class="summary-value in-cart">0</span>
       </div>
     </div>
 
     <div class="list-footer">
       <button id="btn-open-clear-items" class="btn-clear-all" disabled>
-        🗑️ Alle producten wissen
+        Lijst helemaal leegmaken
       </button>
     </div>
   </section>
@@ -209,11 +442,11 @@
   <div class="modal-box">
     <h3 id="prompt-title">Product aanpassen</h3>
     <div style="text-align: left; margin-bottom: 0.5rem;">
-      <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Naam</label>
+      <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Naam</label>
       <input type="text" id="prompt-input" style="margin-top: 0.25rem; margin-bottom: 0.75rem;" required>
     </div>
     <div id="prompt-qty-wrapper" style="text-align: left; margin-bottom: 1.25rem;">
-      <label style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Aantal</label>
+      <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Aantal</label>
       <input type="number" id="prompt-qty-input" min="1" max="99" style="margin-top: 0.25rem;">
     </div>
     <div class="modal-actions">
@@ -243,7 +476,6 @@
     getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   
-  // Voeg Firebase Authentication modules toe
   import { 
     getAuth, 
     signInWithEmailAndPassword, 
@@ -251,8 +483,6 @@
     signOut 
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  // Alleen het e-mailadres staat nog in de code. 
-  // Het wachtwoord (de 6-cijferige pincode) vult de gebruiker zelf in op het scherm.
   const AUTH_EMAIL = "julian.vanneerbos@gmail.com"; 
 
   const firebaseConfig = {
@@ -266,9 +496,8 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app); // Initialiseer Auth
+  const auth = getAuth(app);
 
-  // Offline Firestore caching
   let db;
   try {
     db = initializeFirestore(app, {
@@ -295,41 +524,39 @@
   let unsubscribeLists = null;
   let unsubscribeItems = null;
 
-  // Firebase houdt automatisch bij of de gebruiker (nog) is ingelogd
+  // Moderne SVG Icoontjes templates
+  const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+  const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+
   onAuthStateChanged(auth, (user) => {
     if (user) {
       unlockApp();
     } else {
-      // Gebruiker is niet ingelogd, toon het vergrendelscherm
       authView.classList.remove("hidden");
       dashboardView.classList.add("hidden");
       detailView.classList.add("hidden");
     }
   });
 
-  // Wanneer je op 'Ontgrendelen' klikt
   document.getElementById("auth-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const getyptePin = pinInput.value;
 
     try {
-      // Stuur de getypte pincode als wachtwoord naar Firebase
       await signInWithEmailAndPassword(auth, AUTH_EMAIL, getyptePin);
       authError.textContent = "";
       pinInput.value = "";
     } catch (error) {
-      // Als Firebase de code weigert (of er is geen internet de eerste keer)
       authError.textContent = "Onjuiste toegangscode of geen verbinding.";
       pinInput.value = "";
       pinInput.focus();
     }
   });
 
-  // Wanneer je op het slotje (uitloggen) klikt
   document.getElementById("btn-lock-app").addEventListener("click", async () => {
     if (unsubscribeLists) unsubscribeLists();
     if (unsubscribeItems) unsubscribeItems();
-    await signOut(auth); // Firebase vernietigt de veilige sessie
+    await signOut(auth);
   });
 
   function unlockApp() {
@@ -338,7 +565,6 @@
     startDashboardListener();
   }
 
-  // --- SCHERM NAVIGATIE MET GESCHIEDENIS KOPPELING ---
   function openList(listId, listName) {
     activeListId = listId;
     activeListName = listName;
@@ -348,7 +574,6 @@
     detailView.classList.remove("hidden");
 
     history.pushState({ view: "detail" }, "");
-
     listenToItems(listId);
   }
 
@@ -368,13 +593,13 @@
     history.back();
   });
 
-  window.addEventListener("popstate", (e) => {
+  window.addEventListener("popstate", () => {
     if (!detailView.classList.contains("hidden")) {
       goBackToDashboard();
     }
   });
 
-  // --- AUTOCOMPLETE PRODUCTEN ---
+  // Autocomplete
   let commonGroceries = [];
   fetch('products.json?v=' + Date.now())
     .then(res => res.ok ? res.json() : [])
@@ -414,7 +639,7 @@
     }
   });
 
-  // --- DASHBOARD ---
+  // Dashboard
   function startDashboardListener() {
     if (unsubscribeLists) return;
 
@@ -439,8 +664,8 @@
             <span id="count-${listId}">Laden...</span>
           </div>
           <div class="card-actions">
-            <button class="btn-action-small btn-edit-card" title="Lijst hernoemen">✏️</button>
-            <button class="btn-action-small btn-delete-card" title="Lijst verwijderen">&times;</button>
+            <button class="btn-action-icon btn-edit-card" title="Lijst hernoemen">${SVG_EDIT}</button>
+            <button class="btn-action-icon danger btn-delete-card" title="Lijst verwijderen">${SVG_TRASH}</button>
           </div>
         `;
 
@@ -490,6 +715,7 @@
     input.value = "";
   });
 
+  // Items
   function listenToItems(listId) {
     if (unsubscribeItems) unsubscribeItems();
 
@@ -524,7 +750,7 @@
         summaryCard.classList.remove("hidden");
         summaryTotal.textContent = totalProducts;
         summaryToBuy.textContent = toBuyProducts;
-        summaryInCart.textContent = `${inCartProducts} 🛒`;
+        summaryInCart.textContent = inCartProducts;
       }
       renderItems();
     });
@@ -552,15 +778,17 @@
 
       li.innerHTML = `
         <button class="checkbox-btn" title="${item.completed ? 'Weer toevoegen' : 'Afvinken'}">
-          <input type="checkbox" ${item.completed ? "checked" : ""}>
+          <div class="custom-checkbox">
+            <svg viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
         </button>
         <div class="item-content">
           <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
           ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
         </div>
         <div class="item-actions">
-          <button class="btn-action-small btn-item-edit" title="Bewerken">✏️</button>
-          <button class="btn-action-small btn-delete-item" title="Verwijderen">&times;</button>
+          <button class="btn-action-icon btn-item-edit" title="Bewerken">${SVG_EDIT}</button>
+          <button class="btn-action-icon danger btn-delete-item" title="Verwijderen">${SVG_TRASH}</button>
         </div>
       `;
 
@@ -686,7 +914,7 @@
   });
 
   document.getElementById("btn-open-clear-items").addEventListener("click", () => {
-    openConfirmModal("Alle producten wissen?", `Weet je zeker dat je alle producten van '${activeListName}' wilt wissen?`, async () => {
+    openConfirmModal("Lijst leegmaken?", `Weet je zeker dat je alle producten van '${activeListName}' wilt wissen?`, async () => {
       if (!activeListId || currentItems.length === 0) return;
       const batch = writeBatch(db);
       currentItems.forEach(item => { batch.delete(doc(db, "lists", activeListId, "items", item.id)); });
