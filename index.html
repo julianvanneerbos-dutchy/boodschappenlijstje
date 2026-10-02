@@ -153,7 +153,7 @@
     .suggestions-list li:hover, .suggestions-list li:active { background-color: var(--primary-light); color: var(--primary); font-weight: 600; }
 
     /* Dashboard kaarten */
-    ul.cards-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+    ul.cards-list { list-style: none; padding: 0; margin: 0; position: relative; display: flex; flex-direction: column; gap: 0.6rem; }
     li.list-card {
       background: #ffffff;
       border: 1px solid var(--border);
@@ -162,11 +162,21 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      touch-action: pan-y;
+      cursor: grab;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
       box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
-    li.list-card:active { transform: scale(0.98); background: var(--bg); }
+    li.list-card:active { cursor: grabbing; transform: scale(0.99); background: var(--bg); }
+    li.list-card.is-dragging {
+      background: var(--primary-light);
+      border: 1.5px dashed var(--primary);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+      transform: scale(1.02);
+      z-index: 40;
+    }
+
     .card-info { flex: 1; overflow: hidden; padding-right: 0.5rem; }
     .card-info h3 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-info span { font-size: 0.8rem; color: var(--text-muted); display: block; margin-top: 0.15rem; }
@@ -520,6 +530,7 @@
 
   let activeListId = null;
   let activeListName = "";
+  let currentLists = [];
   let currentItems = [];
   let unsubscribeLists = null;
   let unsubscribeItems = null;
@@ -638,71 +649,180 @@
     }
   });
 
-  // Dashboard
+  // ==========================================
+  // DASHBOARD & DRAG-AND-DROP VOOR LIJSTEN
+  // ==========================================
+  let isDashboardDragging = false;
+  let draggedDashboardCard = null;
+
   function startDashboardListener() {
     if (unsubscribeLists) return;
 
-    const listsContainer = document.getElementById("lists-container");
     const listsEmpty = document.getElementById("lists-empty");
-    const qLists = query(listsCol, orderBy("createdAt", "asc"));
+    const qLists = query(listsCol);
 
     unsubscribeLists = onSnapshot(qLists, (snapshot) => {
-      listsContainer.innerHTML = "";
-      if (snapshot.empty) listsEmpty.classList.remove("hidden");
+      currentLists = [];
+      snapshot.forEach(docSnap => {
+        const d = docSnap.data();
+        currentLists.push({
+          id: docSnap.id,
+          ...d,
+          order: d.order ?? 9999
+        });
+      });
+
+      if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
       else listsEmpty.classList.add("hidden");
 
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const listId = docSnap.id;
-        const li = document.createElement("li");
-        li.className = "list-card";
-        
-        li.innerHTML = `
-          <div class="card-info">
-            <h3>${data.name}</h3>
-            <span id="count-${listId}">Laden...</span>
-          </div>
-          <div class="card-actions">
-            <button class="btn-action-icon btn-edit-card" title="Lijst hernoemen">${SVG_EDIT}</button>
-            <button class="btn-action-icon danger btn-delete-card" title="Lijst verwijderen">${SVG_TRASH}</button>
-          </div>
-        `;
-
-        const itemsRef = collection(db, "lists", listId, "items");
-        onSnapshot(itemsRef, (itemSnap) => {
-          let openProducts = 0;
-          itemSnap.forEach(d => { if (!d.data().completed) openProducts++; });
-          const countEl = document.getElementById(`count-${listId}`);
-          if (countEl) {
-            if (itemSnap.empty) countEl.textContent = "Geen producten";
-            else if (openProducts === 0) countEl.textContent = "Alles gehaald! 🎉";
-            else countEl.textContent = `${openProducts} te halen`;
-          }
-        });
-
-        li.addEventListener("click", () => openList(listId, data.name));
-
-        li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
-          e.stopPropagation();
-          openPromptModal("Lijstnaam aanpassen", data.name, null, async (newName) => {
-            await updateDoc(doc(db, "lists", listId), { name: newName });
-          });
-        });
-
-        li.querySelector(".btn-delete-card").addEventListener("click", (e) => {
-          e.stopPropagation();
-          openConfirmModal("Lijst verwijderen?", "Weet je het zeker? De hele lijst en alle producten worden gewist.", async () => {
-              const snap = await getDocs(collection(db, "lists", listId, "items"));
-              const batch = writeBatch(db);
-              snap.forEach(d => batch.delete(d.ref));
-              batch.delete(doc(db, "lists", listId));
-              await batch.commit();
-          });
-        });
-
-        listsContainer.appendChild(li);
-      });
+      renderDashboardLists();
     });
+  }
+
+  function renderDashboardLists() {
+    if (isDashboardDragging) return;
+
+    const listsContainer = document.getElementById("lists-container");
+    listsContainer.innerHTML = "";
+
+    const sorted = [...currentLists].sort((a, b) => {
+      if ((a.order ?? 9999) !== (b.order ?? 9999)) return (a.order ?? 9999) - (b.order ?? 9999);
+      const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return aTime - bTime;
+    });
+
+    sorted.forEach((data) => {
+      const listId = data.id;
+      const li = document.createElement("li");
+      li.className = "list-card";
+      li.dataset.id = listId;
+      li.draggable = true;
+      
+      li.innerHTML = `
+        <div class="card-info">
+          <h3>${data.name}</h3>
+          <span id="count-${listId}">Laden...</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn-action-icon btn-edit-card" title="Lijst hernoemen">${SVG_EDIT}</button>
+          <button class="btn-action-icon danger btn-delete-card" title="Lijst verwijderen">${SVG_TRASH}</button>
+        </div>
+      `;
+
+      const itemsRef = collection(db, "lists", listId, "items");
+      onSnapshot(itemsRef, (itemSnap) => {
+        let openProducts = 0;
+        itemSnap.forEach(d => { if (!d.data().completed) openProducts++; });
+        const countEl = document.getElementById(`count-${listId}`);
+        if (countEl) {
+          if (itemSnap.empty) countEl.textContent = "Geen producten";
+          else if (openProducts === 0) countEl.textContent = "Alles gehaald! 🎉";
+          else countEl.textContent = `${openProducts} te halen`;
+        }
+      });
+
+      li.addEventListener("click", () => openList(listId, data.name));
+      li.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
+        e.stopPropagation();
+        openPromptModal("Lijstnaam aanpassen", data.name, null, async (newName) => {
+          await updateDoc(doc(db, "lists", listId), { name: newName });
+        });
+      });
+
+      li.querySelector(".btn-delete-card").addEventListener("click", (e) => {
+        e.stopPropagation();
+        openConfirmModal("Lijst verwijderen?", "Weet je het zeker? De hele lijst en alle producten worden gewist.", async () => {
+          const snap = await getDocs(collection(db, "lists", listId, "items"));
+          const batch = writeBatch(db);
+          snap.forEach(d => batch.delete(d.ref));
+          batch.delete(doc(db, "lists", listId));
+          await batch.commit();
+        });
+      });
+
+      attachDashboardTouch(li);
+      attachDashboardMouseDrag(li);
+
+      listsContainer.appendChild(li);
+    });
+
+    setupDashboardDropZone(listsContainer);
+  }
+
+  function attachDashboardTouch(li) {
+    let pressTimer = null, startY = 0, startX = 0;
+
+    li.addEventListener("touchstart", (e) => {
+      if (e.target.closest(".card-actions")) return;
+      startY = e.touches[0].clientY; startX = e.touches[0].clientX;
+      pressTimer = setTimeout(() => {
+        isDashboardDragging = true;
+        if (navigator.vibrate) navigator.vibrate(40);
+        li.classList.add("is-dragging");
+        initDashboardTouchMove(li);
+      }, 260);
+    }, { passive: true });
+
+    li.addEventListener("touchmove", (e) => {
+      if (Math.abs(e.touches[0].clientX - startX) > 6 || Math.abs(e.touches[0].clientY - startY) > 6) {
+        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+      }
+    }, { passive: true });
+
+    li.addEventListener("touchend", () => { if (pressTimer) clearTimeout(pressTimer); });
+    li.addEventListener("touchcancel", () => { if (pressTimer) clearTimeout(pressTimer); });
+  }
+
+  function initDashboardTouchMove(draggedCard) {
+    const listEl = document.getElementById("lists-container");
+    const onMove = (e) => {
+      if (!isDashboardDragging) return;
+      const afterElement = getGenericDragAfterElement(listEl, "li.list-card:not(.is-dragging)", e.touches[0].clientY);
+      if (afterElement == null) listEl.appendChild(draggedCard);
+      else listEl.insertBefore(draggedCard, afterElement);
+    };
+    const onEnd = async () => {
+      window.removeEventListener("touchmove", onMove); window.removeEventListener("touchend", onEnd);
+      draggedCard.classList.remove("is-dragging"); isDashboardDragging = false;
+      await saveDashboardOrder(listEl);
+    };
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd);
+  }
+
+  function attachDashboardMouseDrag(li) {
+    li.addEventListener("dragstart", (e) => {
+      if (e.target.closest(".card-actions")) { e.preventDefault(); return; }
+      isDashboardDragging = true; draggedDashboardCard = li; li.classList.add("is-dragging");
+      e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", li.dataset.id);
+    });
+    li.addEventListener("dragend", async () => {
+      li.classList.remove("is-dragging"); isDashboardDragging = false; draggedDashboardCard = null;
+      await saveDashboardOrder(document.getElementById("lists-container"));
+    });
+  }
+
+  function setupDashboardDropZone(container) {
+    container.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!draggedDashboardCard) return;
+      const afterElement = getGenericDragAfterElement(container, "li.list-card:not(.is-dragging)", e.clientY);
+      if (afterElement == null) container.appendChild(draggedDashboardCard);
+      else container.insertBefore(draggedDashboardCard, afterElement);
+    });
+  }
+
+  async function saveDashboardOrder(container) {
+    const cards = [...container.querySelectorAll("li.list-card")];
+    const batch = writeBatch(db);
+    cards.forEach((card, idx) => {
+      batch.update(doc(db, "lists", card.dataset.id), { order: idx + 1 });
+    });
+    await batch.commit();
+    renderDashboardLists();
   }
 
   document.getElementById("add-list-form").addEventListener("submit", async (e) => {
@@ -710,11 +830,14 @@
     const input = document.getElementById("new-list-name");
     const name = input.value.trim();
     if (!name) return;
-    await addDoc(listsCol, { name: name, createdAt: serverTimestamp() });
+    const nextOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order ?? 0)) + 1 : 1;
+    await addDoc(listsCol, { name: name, order: nextOrder, createdAt: serverTimestamp() });
     input.value = "";
   });
 
-  // Items
+  // ==========================================
+  // ITEMS & DRAG-AND-DROP VOOR PRODUCTEN
+  // ==========================================
   function listenToItems(listId) {
     if (unsubscribeItems) unsubscribeItems();
 
@@ -847,7 +970,7 @@
     const listEl = document.getElementById("items-list");
     const onMove = (e) => {
       if (!isDraggingActive) return;
-      const afterElement = getDragAfterElement(listEl, e.touches[0].clientY);
+      const afterElement = getGenericDragAfterElement(listEl, "li.item-row:not(.is-dragging):not(.is-done)", e.touches[0].clientY);
       if (afterElement == null) {
         const firstDone = listEl.querySelector("li.item-row.is-done");
         if (firstDone) listEl.insertBefore(draggedLi, firstDone); else listEl.appendChild(draggedLi);
@@ -879,7 +1002,7 @@
     listEl.addEventListener("dragover", (e) => {
       e.preventDefault();
       if (!draggedElement) return;
-      const afterElement = getDragAfterElement(listEl, e.clientY);
+      const afterElement = getGenericDragAfterElement(listEl, "li.item-row:not(.is-dragging):not(.is-done)", e.clientY);
       if (afterElement == null) {
         const firstDone = listEl.querySelector("li.item-row.is-done");
         if (firstDone) listEl.insertBefore(draggedElement, firstDone); else listEl.appendChild(draggedElement);
@@ -887,8 +1010,8 @@
     });
   }
 
-  function getDragAfterElement(container, y) {
-    return [...container.querySelectorAll("li.item-row:not(.is-dragging):not(.is-done)")].reduce((closest, child) => {
+  function getGenericDragAfterElement(container, selector, y) {
+    return [...container.querySelectorAll(selector)].reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
       if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
