@@ -1,3 +1,11 @@
+{
+    "version": "v1.4.1",
+    "date": "Oktober 2026",
+    "changes": [
+      "De 'Wat is er nieuw?' link is verplaatst naar de onderkant van het dashboard voor een rustigere header.",
+      "Onder de motorkap: De app is technisch volledig vernieuwd. De code is nu netjes opgesplitst in losse bestanden (HTML, CSS, JS). Dit zorgt voor snellere updates in de toekomst en een betere score op GitHub."
+    ]
+  },
 [
   {
     "version": "v1.4.0",
