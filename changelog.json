@@ -1,5 +1,15 @@
 [
   {
+    "version": "v1.5.0",
+    "date": "Oktober 2026",
+    "changes": [
+      "Nieuwe functie: 'Wat eten we?' weekmenu toegevoegd met handige navigatiebalk onderaan.",
+      "Blader eenvoudig tussen 'Vorige week', 'Deze week' en 'Volgende week'.",
+      "Handige 'Kopieer ↷' knop om favoriete gerechten van vorige week direct over te nemen naar deze week.",
+      "Volledig automatisch gesynchroniseerd via de cloud, inclusief 'Vandaag'-indicator."
+    ]
+  },
+  {
     "version": "v1.4.1",
     "date": "Oktober 2026",
     "changes": [
