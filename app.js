@@ -761,7 +761,7 @@ const DAYS_OF_WEEK = [
   { id: "sun", name: "Zondag" }
 ];
 
-let selectedWeekOffset = 0; // 0 = deze week, 1 = volgende week
+let selectedWeekOffset = 0; // -1 = vorige week, 0 = deze week, 1 = volgende week
 let currentMealsData = {};
 
 function getWeekKey(offsetWeeks = 0) {
@@ -781,20 +781,30 @@ function getWeekKey(offsetWeeks = 0) {
   return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
+const tabPrevWeek = document.getElementById("tab-prev-week");
 const tabThisWeek = document.getElementById("tab-this-week");
 const tabNextWeek = document.getElementById("tab-next-week");
 
-tabThisWeek.addEventListener("click", () => {
-  selectedWeekOffset = 0;
-  tabThisWeek.classList.add("active");
-  tabNextWeek.classList.remove("active");
+function updateActiveWeekTab(activeTab) {
+  [tabPrevWeek, tabThisWeek, tabNextWeek].forEach(btn => btn?.classList.remove("active"));
+  activeTab?.classList.add("active");
+}
+
+tabPrevWeek?.addEventListener("click", () => {
+  selectedWeekOffset = -1;
+  updateActiveWeekTab(tabPrevWeek);
   listenToMeals();
 });
 
-tabNextWeek.addEventListener("click", () => {
+tabThisWeek?.addEventListener("click", () => {
+  selectedWeekOffset = 0;
+  updateActiveWeekTab(tabThisWeek);
+  listenToMeals();
+});
+
+tabNextWeek?.addEventListener("click", () => {
   selectedWeekOffset = 1;
-  tabNextWeek.classList.add("active");
-  tabThisWeek.classList.remove("active");
+  updateActiveWeekTab(tabNextWeek);
   listenToMeals();
 });
 
@@ -819,6 +829,7 @@ function renderMealDays() {
 
   const today = new Date();
   const todayDayIndex = (today.getDay() + 6) % 7; // 0 = Maandag ... 6 = Zondag
+  const isPastWeek = selectedWeekOffset === -1;
 
   DAYS_OF_WEEK.forEach((day, index) => {
     const isToday = (selectedWeekOffset === 0 && index === todayDayIndex);
@@ -832,14 +843,19 @@ function renderMealDays() {
         <span class="meal-day-name ${isToday ? 'is-today' : ''}">
           ${day.name} ${isToday ? '• Vandaag' : ''}
         </span>
-        <span id="saved-${day.id}" class="meal-saved-pill">Opgeslagen ✓</span>
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          ${isPastWeek && mealText ? `<button class="btn-action-icon btn-copy-meal" title="Kopieer naar deze week" style="font-size: 0.72rem; padding: 0.2rem 0.4rem; font-weight: 600; color: var(--primary);">Kopieer ↷</button>` : ''}
+          <span id="saved-${day.id}" class="meal-saved-pill">Opgeslagen ✓</span>
+        </div>
       </div>
-      <input type="text" class="meal-input" id="input-${day.id}" placeholder="Wat eten we?" value="${mealText}">
+      <input type="text" class="meal-input" id="input-${day.id}" placeholder="${isPastWeek ? 'Niets geregistreerd' : 'Wat eten we?'}" value="${mealText}">
     `;
 
     const input = card.querySelector(`#input-${day.id}`);
     const savedPill = card.querySelector(`#saved-${day.id}`);
+    const copyBtn = card.querySelector('.btn-copy-meal');
 
+    // Opslaan bij bewerken
     input.addEventListener("blur", async () => {
       const val = input.value.trim();
       const weekKey = getWeekKey(selectedWeekOffset);
@@ -853,6 +869,16 @@ function renderMealDays() {
         input.blur();
       }
     });
+
+    // Gerecht van vorige week direct doorkopiëren naar deze week
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const thisWeekKey = getWeekKey(0);
+        await setDoc(doc(mealsCol, thisWeekKey), { [day.id]: mealText }, { merge: true });
+        copyBtn.textContent = "Gekopieerd ✓";
+        setTimeout(() => { copyBtn.textContent = "Kopieer ↷"; }, 1500);
+      });
+    }
 
     container.appendChild(card);
   });
