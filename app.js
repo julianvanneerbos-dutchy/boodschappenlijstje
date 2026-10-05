@@ -40,6 +40,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+// Zorgt dat je ingelogd blijft op je telefoon, ook als de app afgesloten wordt
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn("Kon persistentie niet forceren:", err);
+});
 
 let db;
 try {
