@@ -8,6 +8,7 @@ import {
   addDoc,
   onSnapshot,
   doc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -51,13 +52,20 @@ try {
 }
 
 const listsCol = collection(db, "lists");
+const mealsCol = collection(db, "meals");
 
 const authView = document.getElementById("view-auth");
 const dashboardView = document.getElementById("view-dashboard");
 const detailView = document.getElementById("view-list-detail");
+const mealView = document.getElementById("view-mealplanner");
+const bottomNav = document.getElementById("bottom-nav");
 const pinInput = document.getElementById("auth-pin");
 const authError = document.getElementById("auth-error");
 
+const navBtnLists = document.getElementById("nav-btn-lists");
+const navBtnMeals = document.getElementById("nav-btn-meals");
+
+let currentTab = "lists";
 let activeListId = null;
 let activeListName = "";
 let currentLists = [];
@@ -65,6 +73,7 @@ let currentItems = [];
 let unsubscribeLists = null;
 let unsubscribeItems = null;
 let unsubscribeActiveListDoc = null;
+let unsubscribeMeals = null;
 let unsubscribeSubcounts = {};
 
 const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
@@ -75,71 +84,96 @@ onAuthStateChanged(auth, (user) => {
     unlockApp();
   } else {
     stopAllListeners();
-    authView.classList.remove("hidden");
-    dashboardView.classList.add("hidden");
-    detailView.classList.add("hidden");
+    authView?.classList.remove("hidden");
+    dashboardView?.classList.add("hidden");
+    detailView?.classList.add("hidden");
+    mealView?.classList.add("hidden");
+    bottomNav?.classList.add("hidden");
   }
 });
 
 function stopAllListeners() {
-  if (unsubscribeLists) {
-    unsubscribeLists();
-    unsubscribeLists = null;
-  }
-  if (unsubscribeItems) {
-    unsubscribeItems();
-    unsubscribeItems = null;
-  }
-  if (unsubscribeActiveListDoc) {
-    unsubscribeActiveListDoc();
-    unsubscribeActiveListDoc = null;
-  }
+  if (unsubscribeLists) { unsubscribeLists(); unsubscribeLists = null; }
+  if (unsubscribeItems) { unsubscribeItems(); unsubscribeItems = null; }
+  if (unsubscribeActiveListDoc) { unsubscribeActiveListDoc(); unsubscribeActiveListDoc = null; }
+  if (unsubscribeMeals) { unsubscribeMeals(); unsubscribeMeals = null; }
   Object.keys(unsubscribeSubcounts).forEach((id) => {
-    if (typeof unsubscribeSubcounts[id] === "function") {
-      unsubscribeSubcounts[id]();
-    }
+    if (typeof unsubscribeSubcounts[id] === "function") unsubscribeSubcounts[id]();
   });
   unsubscribeSubcounts = {};
 }
 
-document.getElementById("auth-form").addEventListener("submit", async (e) => {
+document.getElementById("auth-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const getyptePin = pinInput.value.trim();
+  const getyptePin = pinInput?.value.trim() || "";
 
   try {
     await signInWithEmailAndPassword(auth, AUTH_EMAIL, getyptePin);
-    authError.textContent = "";
-    pinInput.value = "";
+    if (authError) authError.textContent = "";
+    if (pinInput) pinInput.value = "";
   } catch (error) {
-    authError.textContent = "Onjuiste toegangscode of geen verbinding.";
-    pinInput.value = "";
-    pinInput.focus();
+    if (authError) authError.textContent = "Onjuiste toegangscode of geen verbinding.";
+    if (pinInput) {
+      pinInput.value = "";
+      pinInput.focus();
+    }
   }
 });
 
-document.getElementById("btn-lock-app").addEventListener("click", async () => {
+async function handleLogout() {
   stopAllListeners();
   try {
     await signOut(auth);
   } catch (err) {
     console.warn("Fout bij uitloggen:", err);
   }
-});
+}
+
+document.getElementById("btn-lock-app")?.addEventListener("click", handleLogout);
+document.getElementById("btn-lock-app-meals")?.addEventListener("click", handleLogout);
 
 function unlockApp() {
-  authView.classList.add("hidden");
-  dashboardView.classList.remove("hidden");
-  detailView.classList.add("hidden");
+  authView?.classList.add("hidden");
+  bottomNav?.classList.remove("hidden");
+  switchTab(currentTab || "lists");
   startDashboardListener();
 }
+
+function switchTab(tab) {
+  currentTab = tab;
+  if (tab === "lists") {
+    navBtnLists?.classList.add("active");
+    navBtnMeals?.classList.remove("active");
+    mealView?.classList.add("hidden");
+    if (activeListId) {
+      detailView?.classList.remove("hidden");
+      dashboardView?.classList.add("hidden");
+    } else {
+      dashboardView?.classList.remove("hidden");
+      detailView?.classList.add("hidden");
+    }
+  } else {
+    navBtnMeals?.classList.add("active");
+    navBtnLists?.classList.remove("active");
+    dashboardView?.classList.add("hidden");
+    detailView?.classList.add("hidden");
+    mealView?.classList.remove("hidden");
+    initMealPlanner();
+  }
+}
+
+navBtnLists?.addEventListener("click", () => switchTab("lists"));
+navBtnMeals?.addEventListener("click", () => switchTab("meals"));
 
 function openList(listId, listName) {
   activeListId = listId;
   activeListName = listName;
-  document.getElementById("active-list-title").textContent = listName;
+  const titleEl = document.getElementById("active-list-title");
+  if (titleEl) titleEl.textContent = listName;
 
-  dashboardView.classList.add("hidden");
-  detailView.classList.remove("hidden");
+  dashboardView?.classList.add("hidden");
+  mealView?.classList.add("hidden");
+  detailView?.classList.remove("hidden");
 
   history.pushState({ view: "detail" }, "");
   listenToItems(listId);
@@ -147,31 +181,29 @@ function openList(listId, listName) {
 }
 
 function goBackToDashboard() {
-  if (unsubscribeItems) {
-    unsubscribeItems();
-    unsubscribeItems = null;
-  }
-  if (unsubscribeActiveListDoc) {
-    unsubscribeActiveListDoc();
-    unsubscribeActiveListDoc = null;
-  }
+  if (unsubscribeItems) { unsubscribeItems(); unsubscribeItems = null; }
+  if (unsubscribeActiveListDoc) { unsubscribeActiveListDoc(); unsubscribeActiveListDoc = null; }
   activeListId = null;
-  detailView.classList.add("hidden");
-  dashboardView.classList.remove("hidden");
+  detailView?.classList.add("hidden");
+  if (currentTab === "lists") {
+    dashboardView?.classList.remove("hidden");
+  } else {
+    mealView?.classList.remove("hidden");
+  }
   
-  document.getElementById("confirm-modal").classList.add("hidden");
-  document.getElementById("prompt-modal").classList.add("hidden");
-  document.getElementById("changelog-modal").classList.add("hidden");
+  document.getElementById("confirm-modal")?.classList.add("hidden");
+  document.getElementById("prompt-modal")?.classList.add("hidden");
+  document.getElementById("changelog-modal")?.classList.add("hidden");
   onConfirmCallback = null;
   onPromptCallback = null;
 }
 
-document.getElementById("btn-back-to-dashboard").addEventListener("click", () => {
+document.getElementById("btn-back-to-dashboard")?.addEventListener("click", () => {
   history.back();
 });
 
 window.addEventListener("popstate", () => {
-  if (!detailView.classList.contains("hidden")) {
+  if (detailView && !detailView.classList.contains("hidden")) {
     goBackToDashboard();
   }
 });
@@ -188,35 +220,37 @@ fetch('products.json?v=' + Date.now())
 const inputEl = document.getElementById("item-input");
 const suggestionsEl = document.getElementById("suggestions");
 
-inputEl.addEventListener("input", () => {
-  const val = inputEl.value.toLowerCase().trim();
-  suggestionsEl.innerHTML = "";
-  if (val.length < 1) { suggestionsEl.style.display = "none"; return; }
+if (inputEl && suggestionsEl) {
+  inputEl.addEventListener("input", () => {
+    const val = inputEl.value.toLowerCase().trim();
+    suggestionsEl.innerHTML = "";
+    if (val.length < 1) { suggestionsEl.style.display = "none"; return; }
 
-  const matches = commonGroceries.filter(item => typeof item === "string" && item.toLowerCase().includes(val)).slice(0, 6);
-  if (matches.length === 0) { suggestionsEl.style.display = "none"; return; }
+    const matches = commonGroceries.filter(item => typeof item === "string" && item.toLowerCase().includes(val)).slice(0, 6);
+    if (matches.length === 0) { suggestionsEl.style.display = "none"; return; }
 
-  matches.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    li.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      inputEl.value = item;
-      suggestionsEl.style.display = "none";
-      inputEl.focus();
+    matches.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      li.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        inputEl.value = item;
+        suggestionsEl.style.display = "none";
+        inputEl.focus();
+      });
+      suggestionsEl.appendChild(li);
     });
-    suggestionsEl.appendChild(li);
+    suggestionsEl.style.display = "block";
   });
-  suggestionsEl.style.display = "block";
-});
 
-document.addEventListener("pointerdown", (e) => {
-  if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
-    suggestionsEl.style.display = "none";
-  }
-});
+  document.addEventListener("pointerdown", (e) => {
+    if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
+      suggestionsEl.style.display = "none";
+    }
+  });
+}
 
-// Dashboard & Lijsten
+// Dashboard functionaliteit
 let isDashboardDragging = false;
 let draggedDashboardCard = null;
 
@@ -239,15 +273,15 @@ function startDashboardListener() {
         });
       });
 
-      if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
-      else listsEmpty.classList.add("hidden");
+      if (listsEmpty) {
+        if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
+        else listsEmpty.classList.add("hidden");
+      }
 
       renderDashboardLists();
     },
     (error) => {
-      if (error.code !== "permission-denied") {
-        console.error("Fout bij ophalen lijsten:", error);
-      }
+      if (error.code !== "permission-denied") console.error("Fout bij lijsten:", error);
     }
   );
 }
@@ -256,6 +290,7 @@ function renderDashboardLists() {
   if (isDashboardDragging) return;
 
   const listsContainer = document.getElementById("lists-container");
+  if (!listsContainer) return;
   listsContainer.innerHTML = "";
 
   const sorted = [...currentLists].sort((a, b) => {
@@ -283,9 +318,7 @@ function renderDashboardLists() {
       </div>
     `;
 
-    if (unsubscribeSubcounts[listId]) {
-      unsubscribeSubcounts[listId]();
-    }
+    if (unsubscribeSubcounts[listId]) unsubscribeSubcounts[listId]();
 
     const itemsRef = collection(db, "lists", listId, "items");
     unsubscribeSubcounts[listId] = onSnapshot(
@@ -301,23 +334,21 @@ function renderDashboardLists() {
         }
       },
       (error) => {
-        if (error.code !== "permission-denied") {
-          console.error("Fout bij ophalen aantallen:", error);
-        }
+        if (error.code !== "permission-denied") console.error("Fout bij telling:", error);
       }
     );
 
     li.addEventListener("click", () => openList(listId, data.name));
     li.addEventListener("contextmenu", (e) => e.preventDefault());
 
-    li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
+    li.querySelector(".btn-edit-card")?.addEventListener("click", (e) => {
       e.stopPropagation();
       openPromptModal("Lijstnaam aanpassen", data.name, null, async (newName) => {
         await updateDoc(doc(db, "lists", listId), { name: newName });
       });
     });
 
-    li.querySelector(".btn-delete-card").addEventListener("click", (e) => {
+    li.querySelector(".btn-delete-card")?.addEventListener("click", (e) => {
       e.stopPropagation();
       openConfirmModal("Lijst verwijderen?", "Weet je het zeker? De hele lijst en alle producten worden gewist.", async () => {
         const snap = await getDocs(collection(db, "lists", listId, "items"));
@@ -363,6 +394,7 @@ function attachDashboardTouch(li) {
 
 function initDashboardTouchMove(draggedCard) {
   const listEl = document.getElementById("lists-container");
+  if (!listEl) return;
   const onMove = (e) => {
     if (!isDashboardDragging) return;
     const afterElement = getGenericDragAfterElement(listEl, "li.list-card:not(.is-dragging)", e.touches[0].clientY);
@@ -386,7 +418,8 @@ function attachDashboardMouseDrag(li) {
   });
   li.addEventListener("dragend", async () => {
     li.classList.remove("is-dragging"); isDashboardDragging = false; draggedDashboardCard = null;
-    await saveDashboardOrder(document.getElementById("lists-container"));
+    const listEl = document.getElementById("lists-container");
+    if (listEl) await saveDashboardOrder(listEl);
   });
 }
 
@@ -410,22 +443,19 @@ async function saveDashboardOrder(container) {
   renderDashboardLists();
 }
 
-document.getElementById("add-list-form").addEventListener("submit", async (e) => {
+document.getElementById("add-list-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = document.getElementById("new-list-name");
-  const name = input.value.trim();
+  const name = input ? input.value.trim() : "";
   if (!name) return;
   const nextOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order ?? 0)) + 1 : 1;
   await addDoc(listsCol, { name: name, order: nextOrder, note: "", createdAt: serverTimestamp() });
-  input.value = "";
+  if (input) input.value = "";
 });
 
-// Items & Producten
+// Items
 function listenToItems(listId) {
-  if (unsubscribeItems) {
-    unsubscribeItems();
-    unsubscribeItems = null;
-  }
+  if (unsubscribeItems) { unsubscribeItems(); unsubscribeItems = null; }
 
   const itemsCol = collection(db, "lists", listId, "items");
   const qItems = query(itemsCol, orderBy("order", "asc"));
@@ -450,24 +480,22 @@ function listenToItems(listId) {
         if (it.completed) inCartProducts++; else toBuyProducts++;
       });
 
-      clearBtn.disabled = currentItems.length === 0;
+      if (clearBtn) clearBtn.disabled = currentItems.length === 0;
 
       if (currentItems.length === 0) {
-        itemsEmpty.classList.remove("hidden");
-        summaryCard.classList.add("hidden");
+        itemsEmpty?.classList.remove("hidden");
+        summaryCard?.classList.add("hidden");
       } else {
-        itemsEmpty.classList.add("hidden");
-        summaryCard.classList.remove("hidden");
-        summaryTotal.textContent = totalProducts;
-        summaryToBuy.textContent = toBuyProducts;
-        summaryInCart.textContent = inCartProducts;
+        itemsEmpty?.classList.add("hidden");
+        summaryCard?.classList.remove("hidden");
+        if (summaryTotal) summaryTotal.textContent = totalProducts;
+        if (summaryToBuy) summaryToBuy.textContent = toBuyProducts;
+        if (summaryInCart) summaryInCart.textContent = inCartProducts;
       }
       renderItems();
     },
     (error) => {
-      if (error.code !== "permission-denied") {
-        console.error("Fout bij ophalen items:", error);
-      }
+      if (error.code !== "permission-denied") console.error("Fout bij items:", error);
     }
   );
 }
@@ -478,46 +506,43 @@ const saveNoteBtn = document.getElementById("btn-save-note");
 const noteSavedIndicator = document.getElementById("note-saved-indicator");
 
 function listenToActiveListDoc(listId) {
-  if (unsubscribeActiveListDoc) {
-    unsubscribeActiveListDoc();
-    unsubscribeActiveListDoc = null;
-  }
+  if (unsubscribeActiveListDoc) { unsubscribeActiveListDoc(); unsubscribeActiveListDoc = null; }
 
   unsubscribeActiveListDoc = onSnapshot(
     doc(db, "lists", listId),
     (docSnap) => {
       if (!docSnap.exists()) return;
       const data = docSnap.data();
-      if (document.activeElement !== noteInput) {
+      if (noteInput && document.activeElement !== noteInput) {
         noteInput.value = data.note || "";
       }
     },
     (error) => {
-      if (error.code !== "permission-denied") {
-        console.error("Fout bij ophalen notitie:", error);
-      }
+      if (error.code !== "permission-denied") console.error("Fout bij notitie:", error);
     }
   );
 }
 
 async function saveActiveListNote() {
-  if (!activeListId) return;
+  if (!activeListId || !noteInput) return;
   const noteText = noteInput.value.trim();
   await updateDoc(doc(db, "lists", activeListId), { note: noteText });
-  saveNoteBtn.style.display = "none";
-  noteSavedIndicator.style.display = "inline";
-  setTimeout(() => { noteSavedIndicator.style.display = "none"; }, 2000);
+  if (saveNoteBtn) saveNoteBtn.style.display = "none";
+  if (noteSavedIndicator) {
+    noteSavedIndicator.style.display = "inline";
+    setTimeout(() => { noteSavedIndicator.style.display = "none"; }, 2000);
+  }
 }
 
-noteInput.addEventListener("input", () => {
-  saveNoteBtn.style.display = "inline-block";
+noteInput?.addEventListener("input", () => {
+  if (saveNoteBtn) saveNoteBtn.style.display = "inline-block";
 });
 
-noteInput.addEventListener("blur", () => {
+noteInput?.addEventListener("blur", () => {
   saveActiveListNote();
 });
 
-saveNoteBtn.addEventListener("click", () => {
+saveNoteBtn?.addEventListener("click", () => {
   saveActiveListNote();
 });
 
@@ -528,6 +553,7 @@ function renderItems() {
   if (isDraggingActive) return;
 
   const listEl = document.getElementById("items-list");
+  if (!listEl) return;
   listEl.innerHTML = "";
 
   const sorted = [...currentItems].sort((a, b) => {
@@ -559,7 +585,7 @@ function renderItems() {
 
     li.addEventListener("contextmenu", (e) => { if (!item.completed) e.preventDefault(); });
 
-    li.querySelector(".checkbox-btn").addEventListener("click", (e) => {
+    li.querySelector(".checkbox-btn")?.addEventListener("click", (e) => {
       e.stopPropagation();
       updateDoc(doc(db, "lists", activeListId, "items", item.id), { completed: !item.completed });
     });
@@ -567,14 +593,14 @@ function renderItems() {
     attachTouchInteractions(li, item);
     attachDesktopDrag(li, item);
 
-    li.querySelector(".btn-item-edit").addEventListener("click", (e) => {
+    li.querySelector(".btn-item-edit")?.addEventListener("click", (e) => {
       e.stopPropagation();
       openPromptModal("Product aanpassen", item.name, item.qty ?? 1, async (newName, newQty) => {
         await updateDoc(doc(db, "lists", activeListId, "items", item.id), { name: newName, qty: newQty });
       });
     });
 
-    li.querySelector(".btn-delete-item").addEventListener("click", (e) => {
+    li.querySelector(".btn-delete-item")?.addEventListener("click", (e) => {
       e.stopPropagation();
       deleteDoc(doc(db, "lists", activeListId, "items", item.id));
     });
@@ -611,6 +637,7 @@ function attachTouchInteractions(li, item) {
 
 function initMobileTouchMove(draggedLi) {
   const listEl = document.getElementById("items-list");
+  if (!listEl) return;
   const onMove = (e) => {
     if (!isDraggingActive) return;
     const afterElement = getGenericDragAfterElement(listEl, "li.item-row:not(.is-dragging):not(.is-done)", e.touches[0].clientY);
@@ -637,7 +664,8 @@ function attachDesktopDrag(li, item) {
   });
   li.addEventListener("dragend", async () => {
     li.classList.remove("is-dragging"); isDraggingActive = false; draggedElement = null;
-    await saveNewOrder(document.getElementById("items-list"));
+    const listEl = document.getElementById("items-list");
+    if (listEl) await saveNewOrder(listEl);
   });
 }
 
@@ -669,16 +697,17 @@ async function saveNewOrder(listEl) {
   await batch.commit(); renderItems();
 }
 
-document.getElementById("add-item-form").addEventListener("submit", async (e) => {
+document.getElementById("add-item-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = inputEl.value.trim();
+  const name = inputEl ? inputEl.value.trim() : "";
   if (!name || !activeListId) return;
   const nextOrder = currentItems.length > 0 ? Math.max(...currentItems.map(i => i.order ?? 0)) + 1 : 1;
   await addDoc(collection(db, "lists", activeListId, "items"), { name: name, qty: 1, completed: false, order: nextOrder, createdAt: serverTimestamp() });
-  inputEl.value = ""; suggestionsEl.style.display = "none";
+  if (inputEl) inputEl.value = ""; 
+  if (suggestionsEl) suggestionsEl.style.display = "none";
 });
 
-document.getElementById("btn-open-clear-items").addEventListener("click", () => {
+document.getElementById("btn-open-clear-items")?.addEventListener("click", () => {
   openConfirmModal("Lijst leegmaken?", `Weet je zeker dat je alle producten van '${activeListName}' wilt wissen?`, async () => {
     if (!activeListId || currentItems.length === 0) return;
     const batch = writeBatch(db);
@@ -691,32 +720,38 @@ document.getElementById("btn-open-clear-items").addEventListener("click", () => 
 const confirmModalEl = document.getElementById("confirm-modal");
 let onConfirmCallback = null;
 function openConfirmModal(title, message, onConfirm) {
-  document.getElementById("modal-title").textContent = title;
-  document.getElementById("modal-message").textContent = message;
+  const t = document.getElementById("modal-title");
+  const m = document.getElementById("modal-message");
+  if (t) t.textContent = title;
+  if (m) m.textContent = message;
   onConfirmCallback = onConfirm;
-  confirmModalEl.classList.remove("hidden");
+  confirmModalEl?.classList.remove("hidden");
 }
-document.getElementById("btn-modal-cancel").addEventListener("click", () => { confirmModalEl.classList.add("hidden"); onConfirmCallback = null; });
-document.getElementById("btn-modal-confirm").addEventListener("click", async () => { confirmModalEl.classList.add("hidden"); if (onConfirmCallback) await onConfirmCallback(); onConfirmCallback = null; });
+document.getElementById("btn-modal-cancel")?.addEventListener("click", () => { confirmModalEl?.classList.add("hidden"); onConfirmCallback = null; });
+document.getElementById("btn-modal-confirm")?.addEventListener("click", async () => { confirmModalEl?.classList.add("hidden"); if (onConfirmCallback) await onConfirmCallback(); onConfirmCallback = null; });
 
 const promptModalEl = document.getElementById("prompt-modal");
 const promptInput = document.getElementById("prompt-input");
 const promptQtyInput = document.getElementById("prompt-qty-input");
 let onPromptCallback = null;
 function openPromptModal(title, currentName, currentQty, onSave) {
-  document.getElementById("prompt-title").textContent = title;
-  promptInput.value = currentName;
-  if (currentQty !== null) { document.getElementById("prompt-qty-wrapper").style.display = "block"; promptQtyInput.value = currentQty; } 
-  else document.getElementById("prompt-qty-wrapper").style.display = "none";
+  const t = document.getElementById("prompt-title");
+  if (t) t.textContent = title;
+  if (promptInput) promptInput.value = currentName;
+  const qtyWrapper = document.getElementById("prompt-qty-wrapper");
+  if (qtyWrapper) {
+    if (currentQty !== null) { qtyWrapper.style.display = "block"; if (promptQtyInput) promptQtyInput.value = currentQty; } 
+    else qtyWrapper.style.display = "none";
+  }
   onPromptCallback = onSave;
-  promptModalEl.classList.remove("hidden");
-  setTimeout(() => { promptInput.focus(); promptInput.select(); }, 50);
+  promptModalEl?.classList.remove("hidden");
+  setTimeout(() => { if (promptInput) { promptInput.focus(); promptInput.select(); } }, 50);
 }
-document.getElementById("btn-prompt-cancel").addEventListener("click", () => { promptModalEl.classList.add("hidden"); onPromptCallback = null; });
-document.getElementById("btn-prompt-confirm").addEventListener("click", async () => {
-  const val = promptInput.value.trim(); if (!val) return;
-  promptModalEl.classList.add("hidden");
-  if (onPromptCallback) await onPromptCallback(val, parseInt(promptQtyInput.value, 10) || 1);
+document.getElementById("btn-prompt-cancel")?.addEventListener("click", () => { promptModalEl?.classList.add("hidden"); onPromptCallback = null; });
+document.getElementById("btn-prompt-confirm")?.addEventListener("click", async () => {
+  const val = promptInput ? promptInput.value.trim() : ""; if (!val) return;
+  promptModalEl?.classList.add("hidden");
+  if (onPromptCallback) await onPromptCallback(val, promptQtyInput ? (parseInt(promptQtyInput.value, 10) || 1) : 1);
   onPromptCallback = null;
 });
 
@@ -725,6 +760,7 @@ const changelogModalEl = document.getElementById("changelog-modal");
 const changelogListEl = document.getElementById("changelog-list");
 
 async function loadChangelog() {
+  if (!changelogListEl) return;
   changelogListEl.innerHTML = `<div class="changelog-loading">Laden...</div>`;
   try {
     const res = await fetch('changelog.json?v=' + Date.now());
@@ -751,15 +787,162 @@ async function loadChangelog() {
   }
 }
 
-document.getElementById("btn-open-changelog").addEventListener("click", () => {
-  changelogModalEl.classList.remove("hidden");
+document.getElementById("btn-open-changelog")?.addEventListener("click", () => {
+  changelogModalEl?.classList.remove("hidden");
   loadChangelog();
 });
-document.getElementById("btn-close-changelog").addEventListener("click", () => {
-  changelogModalEl.classList.add("hidden");
+document.getElementById("btn-close-changelog")?.addEventListener("click", () => {
+  changelogModalEl?.classList.add("hidden");
 });
-document.getElementById("btn-close-changelog-x").addEventListener("click", () => {
-  changelogModalEl.classList.add("hidden");
+document.getElementById("btn-close-changelog-x")?.addEventListener("click", () => {
+  changelogModalEl?.classList.add("hidden");
 });
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(e => console.log(e));
+// ==========================================
+// WEEKMENU LOGICA
+// ==========================================
+const DAYS_OF_WEEK = [
+  { id: "mon", name: "Maandag" },
+  { id: "tue", name: "Dinsdag" },
+  { id: "wed", name: "Woensdag" },
+  { id: "thu", name: "Donderdag" },
+  { id: "fri", name: "Vrijdag" },
+  { id: "sat", name: "Zaterdag" },
+  { id: "sun", name: "Zondag" }
+];
+
+let selectedWeekOffset = 0;
+let currentMealsData = {};
+
+function getWeekKey(offsetWeeks = 0) {
+  const now = new Date();
+  now.setDate(now.getDate() + (offsetWeeks * 7));
+  
+  const target = new Date(now.valueOf());
+  const dayNr = (now.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+  }
+  const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
+  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+const tabPrevWeek = document.getElementById("tab-prev-week");
+const tabThisWeek = document.getElementById("tab-this-week");
+const tabNextWeek = document.getElementById("tab-next-week");
+
+function updateActiveWeekTab(activeTab) {
+  [tabPrevWeek, tabThisWeek, tabNextWeek].forEach(btn => btn?.classList.remove("active"));
+  activeTab?.classList.add("active");
+}
+
+tabPrevWeek?.addEventListener("click", () => {
+  selectedWeekOffset = -1;
+  updateActiveWeekTab(tabPrevWeek);
+  listenToMeals();
+});
+
+tabThisWeek?.addEventListener("click", () => {
+  selectedWeekOffset = 0;
+  updateActiveWeekTab(tabThisWeek);
+  listenToMeals();
+});
+
+tabNextWeek?.addEventListener("click", () => {
+  selectedWeekOffset = 1;
+  updateActiveWeekTab(tabNextWeek);
+  listenToMeals();
+});
+
+function initMealPlanner() {
+  listenToMeals();
+}
+
+function listenToMeals() {
+  if (unsubscribeMeals) {
+    unsubscribeMeals();
+    unsubscribeMeals = null;
+  }
+  const weekKey = getWeekKey(selectedWeekOffset);
+  const mealsDocRef = doc(mealsCol, weekKey);
+
+  unsubscribeMeals = onSnapshot(
+    mealsDocRef,
+    (docSnap) => {
+      currentMealsData = docSnap.exists() ? docSnap.data() : {};
+      renderMealDays();
+    },
+    (error) => {
+      if (error.code !== "permission-denied") console.error("Fout bij ophalen weekmenu:", error);
+    }
+  );
+}
+
+function renderMealDays() {
+  const container = document.getElementById("meals-container");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const today = new Date();
+  const todayDayIndex = (today.getDay() + 6) % 7;
+  const isPastWeek = selectedWeekOffset === -1;
+
+  DAYS_OF_WEEK.forEach((day, index) => {
+    const isToday = (selectedWeekOffset === 0 && index === todayDayIndex);
+    const card = document.createElement("div");
+    card.className = "meal-day-card";
+    
+    const mealText = currentMealsData[day.id] || "";
+
+    card.innerHTML = `
+      <div class="meal-day-header">
+        <span class="meal-day-name ${isToday ? 'is-today' : ''}">
+          ${day.name} ${isToday ? '• Vandaag' : ''}
+        </span>
+        <div style="display: flex; align-items: center; gap: 0.4rem;">
+          ${isPastWeek && mealText ? `<button class="btn-action-icon btn-copy-meal" title="Kopieer naar deze week" style="font-size: 0.72rem; padding: 0.2rem 0.4rem; font-weight: 600; color: var(--primary);">Kopieer ↷</button>` : ''}
+          <span id="saved-${day.id}" class="meal-saved-pill">Opgeslagen ✓</span>
+        </div>
+      </div>
+      <input type="text" class="meal-input" id="input-${day.id}" placeholder="${isPastWeek ? 'Niets geregistreerd' : 'Wat eten we?'}" value="${mealText}">
+    `;
+
+    const input = card.querySelector(`#input-${day.id}`);
+    const savedPill = card.querySelector(`#saved-${day.id}`);
+    const copyBtn = card.querySelector('.btn-copy-meal');
+
+    input?.addEventListener("blur", async () => {
+      const val = input.value.trim();
+      const weekKey = getWeekKey(selectedWeekOffset);
+      await setDoc(doc(mealsCol, weekKey), { [day.id]: val }, { merge: true });
+      if (savedPill) {
+        savedPill.style.display = "inline";
+        setTimeout(() => { savedPill.style.display = "none"; }, 1800);
+      }
+    });
+
+    input?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        input.blur();
+      }
+    });
+
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const thisWeekKey = getWeekKey(0);
+        await setDoc(doc(mealsCol, thisWeekKey), { [day.id]: mealText }, { merge: true });
+        copyBtn.textContent = "Gekopieerd ✓";
+        setTimeout(() => { copyBtn.textContent = "Kopieer ↷"; }, 1500);
+      });
+    }
+
+    container.appendChild(card);
+  });
+}
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(e => console.log(e));
+}
