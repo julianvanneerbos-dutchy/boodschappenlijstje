@@ -517,31 +517,31 @@ h1 {
 }
 
 /* ==========================================================================
-   VIEW 3: WEEKMENU / MAALTIJDPLANNER (COMPACT: PAST IN 1 BEELD)
+   VIEW 3: WEEKMENU / MAALTIJDPLANNER (PERFECTE BALANS)
    ========================================================================== */
 #view-mealplanner {
-  padding-bottom: 0.25rem;
+  padding-bottom: 0.5rem;
 }
 
 .meal-tabs {
   display: flex;
   background: var(--input-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.2rem;
-  gap: 0.2rem;
-  margin-bottom: 0.5rem;
+  border-radius: 14px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .meal-tab-btn {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 0.45rem 0.2rem;
-  font-size: 0.78rem;
+  padding: 0.55rem 0.25rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
@@ -550,24 +550,24 @@ h1 {
 .meal-tab-btn.active {
   background: #ffffff;
   color: var(--primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .meals-list {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem; /* Compacte afstand */
+  gap: 0.55rem; /* Net iets meer ademruimte tussen de dagen */
 }
 
 .meal-day-card {
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.4rem 0.65rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 0.6rem 0.85rem; /* Comfortabele tikruimte */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
   transition: border-color 0.15s ease;
 }
 
@@ -583,7 +583,7 @@ h1 {
 }
 
 .meal-day-name {
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -600,19 +600,19 @@ h1 {
   background: transparent;
   border-radius: 0;
   outline: none;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   color: var(--text-main);
-  padding: 0.1rem 0;
+  padding: 0.2rem 0;
   font-family: inherit;
 }
 
 .meal-input::placeholder {
   color: #cbd5e1;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
 }
 
 .meal-saved-pill {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--success);
   display: none;
