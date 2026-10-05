@@ -41,7 +41,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Zorgt dat je ingelogd blijft op je telefoon, ook als de app afgesloten wordt
+// Blijf ingelogd op mobiel
 setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.warn("Kon persistentie niet forceren:", err);
 });
@@ -910,7 +910,7 @@ function renderMealDays() {
           ${day.name} ${isToday ? '• Vandaag' : ''}
         </span>
         <div style="display: flex; align-items: center; gap: 0.4rem;">
-          ${isPastWeek && mealText ? `<button type="button" class="btn-action-icon btn-copy-meal" title="Kopieer naar deze week" style="font-size: 0.72rem; padding: 0.2rem 0.4rem; font-weight: 600; color: var(--primary);">Kopieer ↷</button>` : ''}
+          ${isPastWeek && mealText ? `<button type="button" class="btn-action-icon btn-copy-meal" title="Kopieer naar deze week" style="font-size: 0.72rem; padding: 0.1rem 0.35rem; font-weight: 600; color: var(--primary);">Kopieer ↷</button>` : ''}
           <span id="saved-${day.id}" class="meal-saved-pill">Opgeslagen ✓</span>
         </div>
       </div>
@@ -948,13 +948,6 @@ function renderMealDays() {
 
     container.appendChild(card);
   });
-
-  // EXPLICIETE AFSTANDSHOUDER ONDERAAN VOOR MOBIEL
-  const spacer = document.createElement("div");
-  spacer.style.height = "120px";
-  spacer.style.width = "100%";
-  spacer.style.pointerEvents = "none";
-  container.appendChild(spacer);
 }
 
 if ('serviceWorker' in navigator) {
