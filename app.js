@@ -1,5 +1,4 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 import {
   getFirestore,
   initializeFirestore,
@@ -33,15 +32,10 @@ const firebaseConfig = {
   projectId: "onze-boodschappenlijst",
   storageBucket: "onze-boodschappenlijst.firebasestorage.app",
   messagingSenderId: "188911309446",
-  appId: "1:188911309446:web:3283e385fc23f2ee65f707",
-  measurementId: "G-DD8RZY54ZE"
+  appId: "1:188911309446:web:3283e385fc23f2ee65f707"
 };
 
 const app = initializeApp(firebaseConfig);
-try {
-  getAnalytics(app);
-} catch (e) {}
-
 const auth = getAuth(app);
 
 let db;
@@ -52,6 +46,7 @@ try {
     })
   });
 } catch (error) {
+  console.warn("Offline cache fallback:", error);
   db = getFirestore(app);
 }
 
