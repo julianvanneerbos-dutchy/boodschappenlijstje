@@ -41,12 +41,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let analytics;
+try {
+  analytics = getAnalytics(app);
+} catch (e) {
+  console.warn("Analytics niet geladen:", e);
+}
+
 const auth = getAuth(app);
 
-// Forceer permanente opslag van de inlogsessie op het apparaat
+// Veilig persistentie instellen zonder de app te blokkeren
 setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn("Kon browserLocalPersistence niet instellen:", err);
+  console.warn("Persistentie instellen mislukt (werkt op sessie-basis):", err);
 });
 
 let db;
@@ -57,7 +63,7 @@ try {
     })
   });
 } catch (error) {
-  console.warn("Offline-cache kon niet worden ingeschakeld:", error);
+  console.warn("Offline-cache fallback naar standaard:", error);
   db = getFirestore(app);
 }
 
@@ -88,32 +94,62 @@ let unsubscribeMeals = null;
 const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
+// Auth state observer
 onAuthStateChanged(auth, (user) => {
   if (user) {
     unlockApp();
   } else {
-    authView.classList.remove("hidden");
-    dashboardView.classList.add("hidden");
-    detailView.classList.add("hidden");
-    mealView.classList.add("hidden");
-    bottomNav?.classList.add("hidden");
+    lockApp();
   }
 });
 
-document.getElementById("auth-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const getyptePin = pinInput.value;
+function lockApp() {
+  if (authView) authView.classList.remove("hidden");
+  if (dashboardView) dashboardView.classList.add("hidden");
+  if (detailView) detailView.classList.add("hidden");
+  if (mealView) mealView.classList.add("hidden");
+  if (bottomNav) bottomNav.classList.add("hidden");
+}
 
-  try {
-    await signInWithEmailAndPassword(auth, AUTH_EMAIL, getyptePin);
-    authError.textContent = "";
-    pinInput.value = "";
-  } catch (error) {
-    authError.textContent = "Onjuiste toegangscode of geen verbinding.";
-    pinInput.value = "";
-    pinInput.focus();
-  }
-});
+function unlockApp() {
+  if (authView) authView.classList.add("hidden");
+  if (bottomNav) bottomNav.classList.remove("hidden");
+  switchTab(currentTab || "lists");
+  startDashboardListener();
+}
+
+// Inlog formulier
+const authForm = document.getElementById("auth-form");
+if (authForm) {
+  authForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const getyptePin = pinInput ? pinInput.value.trim() : "";
+    if (!getyptePin) return;
+
+    if (authError) authError.textContent = "Bezig met inloggen...";
+
+    try {
+      await signInWithEmailAndPassword(auth, AUTH_EMAIL, getyptePin);
+      if (authError) authError.textContent = "";
+      if (pinInput) pinInput.value = "";
+    } catch (error) {
+      console.error("Auth error:", error);
+      if (authError) {
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          authError.textContent = "Onjuiste toegangscode.";
+        } else if (error.code === 'auth/too-many-requests') {
+          authError.textContent = "Te vaak geprobeerd. Wacht even en probeer opnieuw.";
+        } else {
+          authError.textContent = "Fout bij inloggen: " + (error.message || "Geen verbinding");
+        }
+      }
+      if (pinInput) {
+        pinInput.value = "";
+        pinInput.focus();
+      }
+    }
+  });
+}
 
 async function handleLogout() {
   if (unsubscribeLists) unsubscribeLists();
@@ -124,4 +160,270 @@ async function handleLogout() {
 }
 
 document.getElementById("btn-lock-app")?.addEventListener("click", handleLogout);
-document
+document.getElementById("btn-lock-app-meals")?.addEventListener("click", handleLogout);
+
+// Navigatie tabs onderaan
+function switchTab(tab) {
+  currentTab = tab;
+  if (tab === "lists") {
+    navBtnLists?.classList.add("active");
+    navBtnMeals?.classList.remove("active");
+    mealView?.classList.add("hidden");
+    if (activeListId) {
+      detailView?.classList.remove("hidden");
+      dashboardView?.classList.add("hidden");
+    } else {
+      dashboardView?.classList.remove("hidden");
+      detailView?.classList.add("hidden");
+    }
+  } else {
+    navBtnMeals?.classList.add("active");
+    navBtnLists?.classList.remove("active");
+    dashboardView?.classList.add("hidden");
+    detailView?.classList.add("hidden");
+    mealView?.classList.remove("hidden");
+    initMealPlanner();
+  }
+}
+
+navBtnLists?.addEventListener("click", () => switchTab("lists"));
+navBtnMeals?.addEventListener("click", () => switchTab("meals"));
+
+function openList(listId, listName) {
+  activeListId = listId;
+  activeListName = listName;
+  const titleEl = document.getElementById("active-list-title");
+  if (titleEl) titleEl.textContent = listName;
+
+  dashboardView?.classList.add("hidden");
+  mealView?.classList.add("hidden");
+  detailView?.classList.remove("hidden");
+
+  history.pushState({ view: "detail" }, "");
+  listenToItems(listId);
+  listenToActiveListDoc(listId);
+}
+
+function goBackToDashboard() {
+  if (unsubscribeItems) unsubscribeItems();
+  if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
+  activeListId = null;
+  detailView?.classList.add("hidden");
+  if (currentTab === "lists") {
+    dashboardView?.classList.remove("hidden");
+  } else {
+    mealView?.classList.remove("hidden");
+  }
+  
+  document.getElementById("confirm-modal")?.classList.add("hidden");
+  document.getElementById("prompt-modal")?.classList.add("hidden");
+  document.getElementById("changelog-modal")?.classList.add("hidden");
+  onConfirmCallback = null;
+  onPromptCallback = null;
+}
+
+document.getElementById("btn-back-to-dashboard")?.addEventListener("click", () => {
+  history.back();
+});
+
+window.addEventListener("popstate", () => {
+  if (detailView && !detailView.classList.contains("hidden")) {
+    goBackToDashboard();
+  }
+});
+
+// Autocomplete producten
+let commonGroceries = [];
+fetch('products.json?v=' + Date.now())
+  .then(res => res.ok ? res.json() : [])
+  .then(data => { commonGroceries = data; })
+  .catch(() => {
+    commonGroceries = ["Banaan", "Bananen", "Brood", "Melk", "Tomaten", "Appels", "Eieren", "Kaas"];
+  });
+
+const inputEl = document.getElementById("item-input");
+const suggestionsEl = document.getElementById("suggestions");
+
+if (inputEl && suggestionsEl) {
+  inputEl.addEventListener("input", () => {
+    const val = inputEl.value.toLowerCase().trim();
+    suggestionsEl.innerHTML = "";
+    if (val.length < 1) { suggestionsEl.style.display = "none"; return; }
+
+    const matches = commonGroceries.filter(item => typeof item === "string" && item.toLowerCase().includes(val)).slice(0, 6);
+    if (matches.length === 0) { suggestionsEl.style.display = "none"; return; }
+
+    matches.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      li.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        inputEl.value = item;
+        suggestionsEl.style.display = "none";
+        inputEl.focus();
+      });
+      suggestionsEl.appendChild(li);
+    });
+    suggestionsEl.style.display = "block";
+  });
+
+  document.addEventListener("pointerdown", (e) => {
+    if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
+      suggestionsEl.style.display = "none";
+    }
+  });
+}
+
+// ==========================================
+// DASHBOARD & DRAG-AND-DROP VOOR LIJSTEN
+// ==========================================
+let isDashboardDragging = false;
+let draggedDashboardCard = null;
+
+function startDashboardListener() {
+  if (unsubscribeLists) return;
+
+  const listsEmpty = document.getElementById("lists-empty");
+  const qLists = query(listsCol);
+
+  unsubscribeLists = onSnapshot(qLists, (snapshot) => {
+    currentLists = [];
+    snapshot.forEach(docSnap => {
+      const d = docSnap.data();
+      currentLists.push({
+        id: docSnap.id,
+        ...d,
+        order: d.order ?? 9999
+      });
+    });
+
+    if (listsEmpty) {
+      if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
+      else listsEmpty.classList.add("hidden");
+    }
+
+    renderDashboardLists();
+  });
+}
+
+function renderDashboardLists() {
+  if (isDashboardDragging) return;
+
+  const listsContainer = document.getElementById("lists-container");
+  if (!listsContainer) return;
+  listsContainer.innerHTML = "";
+
+  const sorted = [...currentLists].sort((a, b) => {
+    if ((a.order ?? 9999) !== (b.order ?? 9999)) return (a.order ?? 9999) - (b.order ?? 9999);
+    const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+    const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+    return aTime - bTime;
+  });
+
+  sorted.forEach((data) => {
+    const listId = data.id;
+    const li = document.createElement("li");
+    li.className = "list-card";
+    li.dataset.id = listId;
+    li.draggable = true;
+    
+    li.innerHTML = `
+      <div class="card-info">
+        <h3>${data.name}</h3>
+        <span id="count-${listId}">Laden...</span>
+      </div>
+      <div class="card-actions">
+        <button class="btn-action-icon btn-edit-card" title="Lijst hernoemen">${SVG_EDIT}</button>
+        <button class="btn-action-icon danger btn-delete-card" title="Lijst verwijderen">${SVG_TRASH}</button>
+      </div>
+    `;
+
+    const itemsRef = collection(db, "lists", listId, "items");
+    onSnapshot(itemsRef, (itemSnap) => {
+      let openProducts = 0;
+      itemSnap.forEach(d => { if (!d.data().completed) openProducts++; });
+      const countEl = document.getElementById(`count-${listId}`);
+      if (countEl) {
+        if (itemSnap.empty) countEl.textContent = "Geen producten";
+        else if (openProducts === 0) countEl.textContent = "Alles gehaald! 🎉";
+        else countEl.textContent = `${openProducts} te halen`;
+      }
+    });
+
+    li.addEventListener("click", () => openList(listId, data.name));
+    li.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    li.querySelector(".btn-edit-card")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openPromptModal("Lijstnaam aanpassen", data.name, null, async (newName) => {
+        await updateDoc(doc(db, "lists", listId), { name: newName });
+      });
+    });
+
+    li.querySelector(".btn-delete-card")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openConfirmModal("Lijst verwijderen?", "Weet je het zeker? De hele lijst en alle producten worden gewist.", async () => {
+        const snap = await getDocs(collection(db, "lists", listId, "items"));
+        const batch = writeBatch(db);
+        snap.forEach(d => batch.delete(d.ref));
+        batch.delete(doc(db, "lists", listId));
+        await batch.commit();
+      });
+    });
+
+    attachDashboardTouch(li);
+    attachDashboardMouseDrag(li);
+
+    listsContainer.appendChild(li);
+  });
+
+  setupDashboardDropZone(listsContainer);
+}
+
+function attachDashboardTouch(li) {
+  let pressTimer = null, startY = 0, startX = 0;
+
+  li.addEventListener("touchstart", (e) => {
+    if (e.target.closest(".card-actions")) return;
+    startY = e.touches[0].clientY; startX = e.touches[0].clientX;
+    pressTimer = setTimeout(() => {
+      isDashboardDragging = true;
+      if (navigator.vibrate) navigator.vibrate(40);
+      li.classList.add("is-dragging");
+      initDashboardTouchMove(li);
+    }, 260);
+  }, { passive: true });
+
+  li.addEventListener("touchmove", (e) => {
+    if (Math.abs(e.touches[0].clientX - startX) > 6 || Math.abs(e.touches[0].clientY - startY) > 6) {
+      if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    }
+  }, { passive: true });
+
+  li.addEventListener("touchend", () => { if (pressTimer) clearTimeout(pressTimer); });
+  li.addEventListener("touchcancel", () => { if (pressTimer) clearTimeout(pressTimer); });
+}
+
+function initDashboardTouchMove(draggedCard) {
+  const listEl = document.getElementById("lists-container");
+  if (!listEl) return;
+  const onMove = (e) => {
+    if (!isDashboardDragging) return;
+    const afterElement = getGenericDragAfterElement(listEl, "li.list-card:not(.is-dragging)", e.touches[0].clientY);
+    if (afterElement == null) listEl.appendChild(draggedCard);
+    else listEl.insertBefore(draggedCard, afterElement);
+  };
+  const onEnd = async () => {
+    window.removeEventListener("touchmove", onMove); window.removeEventListener("touchend", onEnd);
+    draggedCard.classList.remove("is-dragging"); isDashboardDragging = false;
+    await saveDashboardOrder(listEl);
+  };
+  window.addEventListener("touchmove", onMove, { passive: false });
+  window.addEventListener("touchend", onEnd);
+}
+
+function attachDashboardMouseDrag(li) {
+  li.addEventListener("dragstart", (e) => {
+    if (e.target.closest(".card-actions")) { e.preventDefault(); return; }
+    isDashboardDragging = true; draggedDashboardCard = li; li.classList.add("is-dragging");
+    e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain",
