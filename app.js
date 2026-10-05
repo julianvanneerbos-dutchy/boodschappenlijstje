@@ -92,11 +92,16 @@ document.getElementById("auth-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const getyptePin = pinInput.value.trim();
 
+  // Test-alert 1: Controleert of de browser het nieuwe script laadt
+  alert("1. Knop reageert! Ingevoerde pin: " + getyptePin);
+
   try {
     await signInWithEmailAndPassword(auth, AUTH_EMAIL, getyptePin);
+    alert("2. Inloggen geslaagd bij Firebase!");
     authError.textContent = "";
     pinInput.value = "";
   } catch (error) {
+    alert("Fout van Firebase: " + error.code + " - " + error.message);
     authError.textContent = "Onjuiste toegangscode of geen verbinding.";
     pinInput.value = "";
     pinInput.focus();
@@ -163,111 +168,4 @@ fetch('products.json?v=' + Date.now())
     commonGroceries = ["Banaan", "Bananen", "Brood", "Melk", "Tomaten", "Appels", "Eieren", "Kaas"];
   });
 
-const inputEl = document.getElementById("item-input");
-const suggestionsEl = document.getElementById("suggestions");
-
-inputEl.addEventListener("input", () => {
-  const val = inputEl.value.toLowerCase().trim();
-  suggestionsEl.innerHTML = "";
-  if (val.length < 1) { suggestionsEl.style.display = "none"; return; }
-
-  const matches = commonGroceries.filter(item => typeof item === "string" && item.toLowerCase().includes(val)).slice(0, 6);
-  if (matches.length === 0) { suggestionsEl.style.display = "none"; return; }
-
-  matches.forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    li.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      inputEl.value = item;
-      suggestionsEl.style.display = "none";
-      inputEl.focus();
-    });
-    suggestionsEl.appendChild(li);
-  });
-  suggestionsEl.style.display = "block";
-});
-
-document.addEventListener("pointerdown", (e) => {
-  if (!inputEl.contains(e.target) && !suggestionsEl.contains(e.target)) {
-    suggestionsEl.style.display = "none";
-  }
-});
-
-// Dashboard & Lijsten
-let isDashboardDragging = false;
-let draggedDashboardCard = null;
-
-function startDashboardListener() {
-  if (unsubscribeLists) return;
-
-  const listsEmpty = document.getElementById("lists-empty");
-  const qLists = query(listsCol);
-
-  unsubscribeLists = onSnapshot(qLists, (snapshot) => {
-    currentLists = [];
-    snapshot.forEach(docSnap => {
-      const d = docSnap.data();
-      currentLists.push({
-        id: docSnap.id,
-        ...d,
-        order: d.order ?? 9999
-      });
-    });
-
-    if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
-    else listsEmpty.classList.add("hidden");
-
-    renderDashboardLists();
-  });
-}
-
-function renderDashboardLists() {
-  if (isDashboardDragging) return;
-
-  const listsContainer = document.getElementById("lists-container");
-  listsContainer.innerHTML = "";
-
-  const sorted = [...currentLists].sort((a, b) => {
-    if ((a.order ?? 9999) !== (b.order ?? 9999)) return (a.order ?? 9999) - (b.order ?? 9999);
-    const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-    const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-    return aTime - bTime;
-  });
-
-  sorted.forEach((data) => {
-    const listId = data.id;
-    const li = document.createElement("li");
-    li.className = "list-card";
-    li.dataset.id = listId;
-    li.draggable = true;
-    
-    li.innerHTML = `
-      <div class="card-info">
-        <h3>${data.name}</h3>
-        <span id="count-${listId}">Laden...</span>
-      </div>
-      <div class="card-actions">
-        <button class="btn-action-icon btn-edit-card" title="Lijst hernoemen">${SVG_EDIT}</button>
-        <button class="btn-action-icon danger btn-delete-card" title="Lijst verwijderen">${SVG_TRASH}</button>
-      </div>
-    `;
-
-    const itemsRef = collection(db, "lists", listId, "items");
-    onSnapshot(itemsRef, (itemSnap) => {
-      let openProducts = 0;
-      itemSnap.forEach(d => { if (!d.data().completed) openProducts++; });
-      const countEl = document.getElementById(`count-${listId}`);
-      if (countEl) {
-        if (itemSnap.empty) countEl.textContent = "Geen producten";
-        else if (openProducts === 0) countEl.textContent = "Alles gehaald! 🎉";
-        else countEl.textContent = `${openProducts} te halen`;
-      }
-    });
-
-    li.addEventListener("click", () => openList(listId, data.name));
-    li.addEventListener("contextmenu", (e) => e.preventDefault());
-
-    li.querySelector(".btn-edit-card").addEventListener("click", (e) => {
-      e.stopPropagation();
-      openPromptModal("Lijstnaam aanpassen", data.name, null
+const inputEl = document.getElementById("item-input
