@@ -1,6 +1,6 @@
 [
   {
-    "version": "v1.5.0",
+    "version": "v1.5.1",
     "date": "Oktober 2026",
     "changes": [
       "Verbeterde inlogsessie op Android: je blijft nu permanent ingelogd en hoeft de pincode niet steeds opnieuw in te vullen.",
