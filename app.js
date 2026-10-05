@@ -41,19 +41,23 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-let analytics;
+
 try {
-  analytics = getAnalytics(app);
+  getAnalytics(app);
 } catch (e) {
-  console.warn("Analytics niet geladen:", e);
+  console.warn("Analytics kon niet gestart worden:", e);
 }
 
 const auth = getAuth(app);
 
-// Veilig persistentie instellen zonder de app te blokkeren
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-  console.warn("Persistentie instellen mislukt (werkt op sessie-basis):", err);
-});
+// Veilig persistentie instellen zonder crash bij privacy-modes
+try {
+  setPersistence(auth, browserLocalPersistence).catch((e) => {
+    console.warn("setPersistence fallback:", e);
+  });
+} catch (e) {
+  console.warn("setPersistence niet ondersteund:", e);
+}
 
 let db;
 try {
@@ -63,7 +67,6 @@ try {
     })
   });
 } catch (error) {
-  console.warn("Offline-cache fallback naar standaard:", error);
   db = getFirestore(app);
 }
 
@@ -81,7 +84,7 @@ const authError = document.getElementById("auth-error");
 const navBtnLists = document.getElementById("nav-btn-lists");
 const navBtnMeals = document.getElementById("nav-btn-meals");
 
-let currentTab = "lists"; // "lists" of "meals"
+let currentTab = "lists";
 let activeListId = null;
 let activeListName = "";
 let currentLists = [];
@@ -94,7 +97,6 @@ let unsubscribeMeals = null;
 const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-// Auth state observer
 onAuthStateChanged(auth, (user) => {
   if (user) {
     unlockApp();
@@ -118,29 +120,29 @@ function unlockApp() {
   startDashboardListener();
 }
 
-// Inlog formulier
+// Inlog-afhandeling
 const authForm = document.getElementById("auth-form");
 if (authForm) {
   authForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const getyptePin = pinInput ? pinInput.value.trim() : "";
-    if (!getyptePin) return;
+    const pin = pinInput ? pinInput.value.trim() : "";
+    if (!pin) return;
 
-    if (authError) authError.textContent = "Bezig met inloggen...";
+    if (authError) authError.textContent = "Bezig met controleren...";
 
     try {
-      await signInWithEmailAndPassword(auth, AUTH_EMAIL, getyptePin);
+      await signInWithEmailAndPassword(auth, AUTH_EMAIL, pin);
       if (authError) authError.textContent = "";
       if (pinInput) pinInput.value = "";
     } catch (error) {
-      console.error("Auth error:", error);
+      console.error("Inlogfout:", error);
       if (authError) {
         if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-          authError.textContent = "Onjuiste toegangscode.";
+          authError.textContent = "Onjuiste pincode.";
         } else if (error.code === 'auth/too-many-requests') {
-          authError.textContent = "Te vaak geprobeerd. Wacht even en probeer opnieuw.";
+          authError.textContent = "Te vaak geprobeerd. Wacht heel even.";
         } else {
-          authError.textContent = "Fout bij inloggen: " + (error.message || "Geen verbinding");
+          authError.textContent = "Fout: " + (error.message || "Geen verbinding met server");
         }
       }
       if (pinInput) {
@@ -162,7 +164,6 @@ async function handleLogout() {
 document.getElementById("btn-lock-app")?.addEventListener("click", handleLogout);
 document.getElementById("btn-lock-app-meals")?.addEventListener("click", handleLogout);
 
-// Navigatie tabs onderaan
 function switchTab(tab) {
   currentTab = tab;
   if (tab === "lists") {
@@ -232,7 +233,7 @@ window.addEventListener("popstate", () => {
   }
 });
 
-// Autocomplete producten
+// Autocomplete
 let commonGroceries = [];
 fetch('products.json?v=' + Date.now())
   .then(res => res.ok ? res.json() : [])
@@ -274,9 +275,7 @@ if (inputEl && suggestionsEl) {
   });
 }
 
-// ==========================================
-// DASHBOARD & DRAG-AND-DROP VOOR LIJSTEN
-// ==========================================
+// Dashboard functionaliteit
 let isDashboardDragging = false;
 let draggedDashboardCard = null;
 
@@ -426,4 +425,111 @@ function attachDashboardMouseDrag(li) {
   li.addEventListener("dragstart", (e) => {
     if (e.target.closest(".card-actions")) { e.preventDefault(); return; }
     isDashboardDragging = true; draggedDashboardCard = li; li.classList.add("is-dragging");
-    e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain",
+    e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", li.dataset.id);
+  });
+  li.addEventListener("dragend", async () => {
+    li.classList.remove("is-dragging"); isDashboardDragging = false; draggedDashboardCard = null;
+    const listEl = document.getElementById("lists-container");
+    if (listEl) await saveDashboardOrder(listEl);
+  });
+}
+
+function setupDashboardDropZone(container) {
+  container.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    if (!draggedDashboardCard) return;
+    const afterElement = getGenericDragAfterElement(container, "li.list-card:not(.is-dragging)", e.clientY);
+    if (afterElement == null) container.appendChild(draggedDashboardCard);
+    else container.insertBefore(draggedDashboardCard, afterElement);
+  });
+}
+
+async function saveDashboardOrder(container) {
+  const cards = [...container.querySelectorAll("li.list-card")];
+  const batch = writeBatch(db);
+  cards.forEach((card, idx) => {
+    batch.update(doc(db, "lists", card.dataset.id), { order: idx + 1 });
+  });
+  await batch.commit();
+  renderDashboardLists();
+}
+
+document.getElementById("add-list-form")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = document.getElementById("new-list-name");
+  const name = input ? input.value.trim() : "";
+  if (!name) return;
+  const nextOrder = currentLists.length > 0 ? Math.max(...currentLists.map(l => l.order ?? 0)) + 1 : 1;
+  await addDoc(listsCol, { name: name, order: nextOrder, note: "", createdAt: serverTimestamp() });
+  if (input) input.value = "";
+});
+
+// Items
+function listenToItems(listId) {
+  if (unsubscribeItems) unsubscribeItems();
+
+  const itemsCol = collection(db, "lists", listId, "items");
+  const qItems = query(itemsCol, orderBy("order", "asc"));
+  const clearBtn = document.getElementById("btn-open-clear-items");
+  const itemsEmpty = document.getElementById("items-empty");
+  const summaryCard = document.getElementById("summary-container");
+  const summaryTotal = document.getElementById("summary-total");
+  const summaryToBuy = document.getElementById("summary-to-buy");
+  const summaryInCart = document.getElementById("summary-in-cart");
+
+  unsubscribeItems = onSnapshot(qItems, (snapshot) => {
+    currentItems = [];
+    let totalProducts = 0, toBuyProducts = 0, inCartProducts = 0;
+
+    snapshot.forEach(docSnap => {
+      const it = { id: docSnap.id, ...docSnap.data() };
+      it.qty = it.qty ?? 1;
+      currentItems.push(it);
+      totalProducts++;
+      if (it.completed) inCartProducts++; else toBuyProducts++;
+    });
+
+    if (clearBtn) clearBtn.disabled = currentItems.length === 0;
+
+    if (currentItems.length === 0) {
+      itemsEmpty?.classList.remove("hidden");
+      summaryCard?.classList.add("hidden");
+    } else {
+      itemsEmpty?.classList.add("hidden");
+      summaryCard?.classList.remove("hidden");
+      if (summaryTotal) summaryTotal.textContent = totalProducts;
+      if (summaryToBuy) summaryToBuy.textContent = toBuyProducts;
+      if (summaryInCart) summaryInCart.textContent = inCartProducts;
+    }
+    renderItems();
+  });
+}
+
+const noteInput = document.getElementById("list-note-input");
+const saveNoteBtn = document.getElementById("btn-save-note");
+const noteSavedIndicator = document.getElementById("note-saved-indicator");
+
+function listenToActiveListDoc(listId) {
+  if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
+
+  unsubscribeActiveListDoc = onSnapshot(doc(db, "lists", listId), (docSnap) => {
+    if (!docSnap.exists()) return;
+    const data = docSnap.data();
+    if (noteInput && document.activeElement !== noteInput) {
+      noteInput.value = data.note || "";
+    }
+  });
+}
+
+async function saveActiveListNote() {
+  if (!activeListId || !noteInput) return;
+  const noteText = noteInput.value.trim();
+  await updateDoc(doc(db, "lists", activeListId), { note: noteText });
+  if (saveNoteBtn) saveNoteBtn.style.display = "none";
+  if (noteSavedIndicator) {
+    noteSavedIndicator.style.display = "inline";
+    setTimeout(() => { noteSavedIndicator.style.display = "none"; }, 2000);
+  }
+}
+
+noteInput?.addEventListener("input", () => {
