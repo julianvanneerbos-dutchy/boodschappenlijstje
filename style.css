@@ -31,7 +31,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 1rem 0.5rem 5.5rem 0.5rem;
+  padding: 1rem 0.5rem 6.5rem 0.5rem;
   overflow-x: hidden;
 }
 
@@ -43,9 +43,9 @@ body {
   max-width: 480px;
   background: var(--surface);
   border-radius: 20px;
-  padding: 1.25rem 1rem 2.5rem 1rem;
+  padding: 1.25rem 1rem 3rem 1rem;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
-  min-height: calc(100vh - 2rem);
+  min-height: calc(100vh - 2.5rem);
   margin-bottom: 2rem;
 }
 
@@ -624,23 +624,20 @@ h1 {
   bottom: 0;
   left: 0;
   right: 0;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  width: 100vw;
+  background: #ffffff;
   border-top: 1px solid var(--border);
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   align-items: center;
-  gap: 2rem;
-  padding: 0.5rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px)) 1rem;
-  z-index: 90;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+  padding: 0.55rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px)) 1rem;
+  z-index: 999;
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
 }
 
 .bottom-nav-btn {
   flex: 1;
-  max-width: 160px;
+  max-width: 180px;
   background: transparent;
   border: none;
   display: flex;
@@ -688,7 +685,7 @@ h1 {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  z-index: 100;
+  z-index: 1000;
   backdrop-filter: blur(4px);
 }
 
@@ -785,51 +782,4 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-}
-
-.changelog-content {
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 0.35rem;
-  margin-bottom: 1rem;
-}
-
-.changelog-entry {
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.changelog-entry:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.changelog-entry-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.changelog-badge {
-  background: rgba(79, 70, 229, 0.1);
-  color: var(--primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-}
-
-.changelog-date {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.changelog-entry ul {
-  padding-left: 1.1rem;
-  font-size: 0.85rem;
-  color: var(--text-main);
-  line-height: 1.45;
-}
+  margin-bottom:
