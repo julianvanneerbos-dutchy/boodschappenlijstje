@@ -37,12 +37,11 @@ body {
   max-width: 480px;
   background: var(--surface);
   border-radius: 20px;
-  padding: 1.25rem 1rem 5rem 1rem; /* Ruimte onderaan voor bottom-nav */
+  padding: 1.25rem 1rem 5.5rem 1rem; /* Ruimte onderaan zodat niets achter de balk verdwijnt */
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
   height: fit-content;
   max-height: 100%;
   overflow-y: auto;
-  position: relative;
 }
 
 header {
@@ -587,13 +586,14 @@ li.item-row.is-dragging {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 0.5rem;
+  padding: 0.5rem 0.2rem;
   border-radius: 9px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .week-btn.active {
@@ -665,25 +665,31 @@ li.item-row.is-dragging {
 }
 
 /* ==========================================
-   BOTTOM NAVIGATION
+   BOTTOM NAVIGATION (Vast onderaan scherm)
    ========================================== */
 .bottom-nav {
-  position: absolute;
+  position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid var(--border);
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 0 1rem;
-  z-index: 60;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 9999;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.bottom-nav.hidden {
+  display: none !important;
 }
 
 .nav-item {
@@ -691,23 +697,26 @@ li.item-row.is-dragging {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
+  justify-content: center;
+  gap: 0.25rem;
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0.35rem 0;
+  padding: 0.4rem 0;
   transition: all 0.15s ease;
 }
 
 .nav-item svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
 }
 
 .nav-item span {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  color: inherit;
 }
 
 .nav-item.active {
@@ -715,7 +724,7 @@ li.item-row.is-dragging {
 }
 
 .nav-item:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 /* Footer & Modals */
@@ -778,11 +787,11 @@ li.item-row.is-dragging {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  z-index: 100;
+  z-index: 10000;
 }
 
 .modal-overlay.hidden {
-  display: none;
+  display: none !important;
 }
 
 .modal-box {
