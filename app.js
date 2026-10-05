@@ -22,7 +22,9 @@ import {
   getAuth, 
   signInWithEmailAndPassword, 
   onAuthStateChanged, 
-  signOut 
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const AUTH_EMAIL = "julian.vanneerbos@gmail.com"; 
