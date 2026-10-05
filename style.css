@@ -1,477 +1,411 @@
+/* ==========================================================================
+   BASIS VARIABELEN & THEMA
+   ========================================================================== */
 :root {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
-  --primary-light: #eef2ff;
-  --surface: #ffffff;
   --bg: #f8fafc;
+  --surface: #ffffff;
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border: #e2e8f0;
   --danger: #ef4444;
-  --danger-light: #fef2f2;
+  --danger-hover: #dc2626;
+  --success: #22c55e;
+  --card-bg: #ffffff;
+  --input-bg: #f1f5f9;
 }
 
 * {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #e2e8f0;
+  color: var(--text-main);
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  overscroll-behavior-y: none;
-  color: var(--text-main);
+  align-items: flex-start;
+  padding: 1rem 0.5rem 5.5rem 0.5rem;
+  overflow-x: hidden;
 }
 
-body {
-  padding: 0.75rem;
-}
-
+/* ==========================================================================
+   HOOFDCONTAINER
+   ========================================================================== */
 .container {
   width: 100%;
   max-width: 480px;
   background: var(--surface);
   border-radius: 20px;
-  padding: 1.25rem 1rem 5.5rem 1rem; /* Ruimte onderaan zodat niets achter de balk verdwijnt */
+  padding: 1.25rem 1rem 2.5rem 1rem;
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
-  height: fit-content;
-  max-height: 100%;
-  overflow-y: auto;
+  min-height: calc(100vh - 2rem);
+  margin-bottom: 2rem;
 }
 
 header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
 }
 
 h1 {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  margin: 0;
-  color: var(--text-main);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   KNOPPEN & VELDEN
+   ========================================================================== */
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-primary:active {
+  background: var(--primary-hover);
+  transform: scale(0.97);
 }
 
 .btn-icon {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 0.45rem 0.65rem;
+  background: var(--input-bg);
+  border: none;
   border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  transition: all 0.15s ease;
 }
 
 .btn-icon:active {
-  transform: scale(0.96);
-  background: #e2e8f0;
-}
-
-/* Invoervelden & knoppen */
-.input-wrapper {
-  position: relative;
-  width: 100%;
+  background: var(--border);
 }
 
 .input-row {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
-input[type="text"], input[type="password"], input[type="number"] {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1.5px solid var(--border);
+.input-row input {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
   border-radius: 12px;
+  padding: 0.65rem 0.85rem;
   font-size: 0.95rem;
   outline: none;
-  background: #fafafa;
-  transition: all 0.2s ease;
-  color: var(--text-main);
+  font-family: inherit;
 }
 
-input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+.input-row input:focus {
   border-color: var(--primary);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-button.btn-primary {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 0.75rem 1.15rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.95rem;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.25);
+.input-wrapper {
+  position: relative;
+  flex: 1;
 }
 
-button.btn-primary:active {
-  transform: scale(0.97);
-  background: var(--primary-hover);
+.input-wrapper input {
+  width: 100%;
 }
 
-/* Pincode Scherm */
+/* ==========================================================================
+   VIEW 0: AUTHENTICATIE / PINCODE
+   ========================================================================== */
 #view-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
   text-align: center;
-  padding: 2rem 0;
 }
 
 .auth-icon {
-  font-size: 3rem;
-  margin-bottom: 0.75rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .auth-title {
-  margin: 0 0 0.4rem 0;
-  color: var(--text-main);
+  font-size: 1.3rem;
   font-weight: 700;
+  margin-bottom: 0.2rem;
 }
 
 .auth-subtitle {
+  font-size: 0.85rem;
   color: var(--text-muted);
-  font-size: 0.9rem;
   margin-bottom: 1.5rem;
 }
 
 .auth-pin-input {
-  letter-spacing: 0.6rem;
-  font-size: 1.6rem;
+  width: 100%;
+  max-width: 200px;
+  letter-spacing: 0.5em;
   text-align: center;
-  width: 200px;
-  margin: 0 auto 1.25rem auto;
-  display: block;
-  font-weight: 700;
+  font-size: 1.5rem;
+  padding: 0.6rem;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: var(--input-bg);
+  outline: none;
+  margin-bottom: 1rem;
+}
+
+.auth-pin-input:focus {
+  border-color: var(--primary);
+  background: #ffffff;
 }
 
 .auth-submit-btn {
-  width: 200px;
+  width: 100%;
+  max-width: 200px;
+  padding: 0.75rem;
 }
 
 .auth-error {
   color: var(--danger);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin-top: 0.75rem;
   min-height: 1.2rem;
 }
 
-/* Autocomplete dropdown */
-.suggestions-list {
-  position: absolute;
-  top: 105%;
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  max-height: 220px;
-  overflow-y: auto;
-  z-index: 50;
+/* ==========================================================================
+   VIEW 1 & 2: DASHBOARD & PRODUCTENLIJST
+   ========================================================================== */
+.cards-list,
+#items-list {
   list-style: none;
-  padding: 0.3rem;
-  margin: 0;
-  display: none;
-}
-
-.suggestions-list li {
-  padding: 0.65rem 0.85rem;
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-radius: 8px;
-  transition: background 0.15s ease;
-}
-
-.suggestions-list li:hover, .suggestions-list li:active {
-  background-color: var(--primary-light);
-  color: var(--primary);
-  font-weight: 600;
-}
-
-/* Dashboard kaarten */
-ul.cards-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
-li.list-card {
+.list-card {
   background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.85rem 1rem;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   user-select: none;
-  touch-action: pan-y;
-  cursor: grab;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-li.list-card:active {
-  cursor: grabbing;
-  transform: scale(0.99);
-  background: var(--bg);
-}
-
-li.list-card.is-dragging {
-  background: var(--primary-light);
-  border: 1.5px dashed var(--primary);
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
-  transform: scale(1.02);
-  z-index: 40;
-}
-
-.card-info {
-  flex: 1;
-  overflow: hidden;
-  padding-right: 0.5rem;
+.list-card.is-dragging,
+.item-row.is-dragging {
+  opacity: 0.4;
+  border: 2px dashed var(--primary);
 }
 
 .card-info h3 {
-  margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 0.15rem;
 }
 
 .card-info span {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  display: block;
-  margin-top: 0.15rem;
 }
 
-.card-actions {
+.card-actions,
+.item-actions {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
-/* Actieknoppen */
 .btn-action-icon {
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0.35rem;
   border-radius: 8px;
-  display: inline-flex;
+  color: var(--text-muted);
+  display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  transition: all 0.15s ease;
 }
 
 .btn-action-icon svg {
   width: 17px;
   height: 17px;
-  stroke-width: 2.2;
+  stroke-width: 2;
 }
 
-.btn-action-icon:hover, .btn-action-icon:active {
-  background: #f1f5f9;
-  color: var(--text-main);
-}
-
-.btn-action-icon.danger:hover, .btn-action-icon.danger:active {
-  background: var(--danger-light);
+.btn-action-icon.danger {
   color: var(--danger);
 }
 
-/* Compacte lijst items */
-ul#items-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-li.item-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.45rem 0.5rem 0.45rem 0.35rem;
+.item-row {
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 11px;
-  user-select: none;
-  touch-action: pan-y;
-  cursor: grab;
-  transition: all 0.15s ease;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-li.item-row:active {
-  cursor: grabbing;
-}
-
-li.item-row.is-done {
-  opacity: 0.5;
-  background: #fafafa;
-  border-color: #f1f5f9;
-  cursor: default;
-}
-
-li.item-row.is-dragging {
-  background: var(--primary-light);
-  border: 1.5px dashed var(--primary);
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
-  transform: scale(1.015);
-  z-index: 40;
-}
-
-/* Custom Checkbox */
 .checkbox-btn {
   background: transparent;
   border: none;
-  padding: 0.25rem 0.35rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  padding: 0;
 }
 
 .custom-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 1.8px solid #cbd5e1;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  border: 2px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .custom-checkbox svg {
-  width: 12px;
-  height: 12px;
-  stroke: white;
+  width: 14px;
+  height: 14px;
+  stroke: #ffffff;
   stroke-width: 3;
-  stroke-dasharray: 20;
-  stroke-dashoffset: 20;
-  transition: stroke-dashoffset 0.2s ease;
+  display: none;
 }
 
-.is-done .custom-checkbox {
-  background: var(--primary);
-  border-color: var(--primary);
+.item-row.is-done .custom-checkbox {
+  background: var(--success);
+  border-color: var(--success);
 }
 
-.is-done .custom-checkbox svg {
-  stroke-dashoffset: 0;
+.item-row.is-done .custom-checkbox svg {
+  display: block;
 }
 
 .item-content {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex: 1;
-  min-width: 0;
-  margin-left: 0.15rem;
+  gap: 0.5rem;
+  overflow: hidden;
 }
 
 .item-name {
-  font-size: 0.92rem;
-  font-weight: 500;
-  color: var(--text-main);
-  word-break: break-word;
-  line-height: 1.25;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.item-qty-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--primary);
-  background: var(--primary-light);
-  padding: 0.1rem 0.45rem;
-  border-radius: 9999px;
-  flex-shrink: 0;
-}
-
-.is-done .item-qty-badge {
-  background: #e2e8f0;
-  color: var(--text-muted);
-}
-
-.done {
+.item-name.done {
   text-decoration: line-through;
   color: var(--text-muted);
 }
 
-.item-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.1rem;
-  flex-shrink: 0;
+.item-qty-badge {
+  background: var(--input-bg);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
 }
 
-.list-title-text {
-  font-size: 1.15rem;
-  text-align: right;
-}
-
-/* Statistiekenbalk */
-.summary-card {
-  margin-top: 1rem;
-  background: #f8fafc;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 0.7rem 0.5rem;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
+.empty-state {
   text-align: center;
+  color: var(--text-muted);
+  padding: 2.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Autocomplete suggesties */
+.suggestions-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  list-style: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  display: none;
+  overflow: hidden;
+}
+
+.suggestions-list li {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--input-bg);
+}
+
+.suggestions-list li:last-child {
+  border-bottom: none;
+}
+
+.suggestions-list li:active {
+  background: var(--input-bg);
+}
+
+/* Samenvatting balk & Notities */
+.summary-card {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--input-bg);
+  border-radius: 14px;
+  padding: 0.75rem 0.5rem;
+  margin-top: 1.25rem;
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.15rem;
 }
 
 .summary-label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 700;
 }
 
 .summary-value {
   font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text-main);
+  font-weight: 700;
 }
 
 .summary-value.to-buy {
@@ -479,40 +413,31 @@ li.item-row.is-dragging {
 }
 
 .summary-value.in-cart {
-  color: #16a34a;
+  color: var(--success);
 }
 
 .summary-divider {
   width: 1px;
-  height: 22px;
-  background: #e2e8f0;
+  height: 24px;
+  background: var(--border);
 }
 
-/* Opmerkingen Kaart */
 .note-card {
-  margin-top: 1rem;
   background: #ffffff;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 0.75rem 0.85rem;
-  transition: all 0.2s ease;
-}
-
-.note-card:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  padding: 0.85rem 1rem;
+  margin-top: 1rem;
 }
 
 .note-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.35rem;
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  align-items: center;
+  font-size: 0.8rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
 }
 
 .note-header span {
@@ -522,255 +447,53 @@ li.item-row.is-dragging {
 }
 
 .note-saved-text {
-  font-size: 0.72rem;
-  color: #16a34a;
+  color: var(--success);
+  font-size: 0.75rem;
   display: none;
 }
 
 .note-textarea {
   width: 100%;
   border: none;
+  background: transparent;
   outline: none;
   resize: none;
+  font-family: inherit;
   font-size: 0.88rem;
   color: var(--text-main);
-  background: transparent;
-  padding: 0;
-  line-height: 1.4;
-  font-family: inherit;
-  min-height: 48px;
-}
-
-.note-textarea::placeholder {
-  color: #94a3b8;
 }
 
 .note-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 0.3rem;
 }
 
 .btn-save-note {
+  display: none;
   background: var(--primary);
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  display: none;
-  transition: all 0.15s ease;
-}
-
-.btn-save-note:active {
-  transform: scale(0.96);
-  background: var(--primary-hover);
-}
-
-/* ==========================================
-   WEEKMENU / MEAL PLANNER
-   ========================================== */
-.week-switch {
-  display: flex;
-  background: var(--bg);
-  padding: 0.25rem;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  gap: 0.3rem;
-  margin-bottom: 1rem;
-}
-
-.week-btn {
-  flex: 1;
-  border: none;
-  background: transparent;
-  padding: 0.5rem 0.2rem;
-  border-radius: 9px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.week-btn.active {
-  background: #ffffff;
-  color: var(--primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-}
-
-.meals-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.meal-day-card {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 0.75rem 0.9rem;
-  transition: border-color 0.2s ease;
-}
-
-.meal-day-card:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
-}
-
-.meal-day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.25rem;
-}
-
-.meal-day-name {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.meal-day-name.is-today {
-  color: var(--primary);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.meal-saved-pill {
-  font-size: 0.7rem;
-  color: #16a34a;
-  display: none;
-}
-
-.meal-input {
-  width: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 0.92rem;
-  color: var(--text-main);
-  padding: 0.2rem 0;
-  line-height: 1.35;
-}
-
-.meal-input::placeholder {
-  color: #94a3b8;
-  font-style: italic;
-  font-size: 0.86rem;
-}
-
-/* ==========================================
-   BOTTOM NAVIGATION (Vast onderaan scherm)
-   ========================================== */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0 1rem;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  z-index: 9999;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-}
-
-.bottom-nav.hidden {
-  display: none !important;
-}
-
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 0.4rem 0;
-  transition: all 0.15s ease;
-}
-
-.nav-item svg {
-  width: 22px;
-  height: 22px;
-  stroke: currentColor;
-}
-
-.nav-item span {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: inherit;
-}
-
-.nav-item.active {
-  color: var(--primary);
-}
-
-.nav-item:active {
-  transform: scale(0.92);
-}
-
-/* Footer & Modals */
-.dashboard-footer {
-  margin-top: 1.5rem;
-  text-align: center;
-  padding-top: 0.5rem;
-}
-
-.changelog-link {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-  padding: 0.4rem 0.6rem;
-  transition: color 0.15s ease;
-}
-
-.changelog-link:hover, .changelog-link:active {
-  color: var(--primary);
 }
 
 .list-footer {
-  margin-top: 1rem;
-  text-align: center;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
 }
 
 .btn-clear-all {
-  background: var(--danger-light);
-  color: var(--danger);
+  background: transparent;
   border: none;
-  padding: 0.6rem 1.15rem;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  color: var(--danger);
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-clear-all:active {
-  transform: scale(0.97);
-  background: #fee2e2;
+  padding: 0.4rem 0.8rem;
 }
 
 .btn-clear-all:disabled {
@@ -778,236 +501,158 @@ li.item-row.is-dragging {
   cursor: not-allowed;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 10000;
-}
-
-.modal-overlay.hidden {
-  display: none !important;
-}
-
-.modal-box {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 1.4rem;
-  max-width: 340px;
-  width: 100%;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+.dashboard-footer {
+  margin-top: 2rem;
   text-align: center;
 }
 
-.modal-box h3 {
-  margin-top: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.modal-box p {
-  color: var(--text-muted);
-  font-size: 0.88rem;
-  margin-bottom: 1.15rem;
-  line-height: 1.4;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.modal-btn {
-  flex: 1;
-  padding: 0.7rem 0.9rem;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
+.changelog-link {
+  background: transparent;
   border: none;
-  transition: all 0.15s ease;
-}
-
-.btn-cancel {
-  background: #f1f5f9;
   color: var(--text-muted);
-}
-
-.btn-confirm-delete {
-  background: var(--danger);
-  color: #ffffff;
-}
-
-.form-field-group {
-  text-align: left;
-  margin-bottom: 0.4rem;
-}
-
-.form-field-group.qty-group {
-  margin-bottom: 1.1rem;
-}
-
-.form-field-label {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.form-field-input {
-  margin-top: 0.2rem;
-  margin-bottom: 0.6rem;
-}
-
-.form-field-input-qty {
-  margin-top: 0.2rem;
-}
-
-.modal-save-btn {
-  padding: 0.7rem 0.9rem;
-}
-
-/* Changelog Modal Styles */
-.changelog-box {
-  max-width: 400px;
-  text-align: left;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.changelog-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.changelog-title {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.changelog-close-btn {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.changelog-content {
-  overflow-y: auto;
-  margin: 0.75rem 0 1rem 0;
-  padding-right: 0.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.changelog-loading {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 1rem;
-}
-
-.changelog-entry {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 0.75rem 0.85rem;
-}
-
-.changelog-entry-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.changelog-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 0.1rem 0.45rem;
-  border-radius: 9999px;
-}
-
-.changelog-date {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.changelog-entry ul {
-  margin: 0;
-  padding-left: 1.1rem;
-  font-size: 0.84rem;
-  color: var(--text-main);
-  line-height: 1.35;
-}
-
-.changelog-entry li {
-  margin-bottom: 0.25rem;
-}
-
-.changelog-btn-close {
-  padding: 0.65rem 1rem;
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 2rem 1rem;
-  font-size: 0.88rem;
-}
-
-.hidden {
-  display: none !important;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* ==========================================================================
-   STAP 2: STYLING VOOR WEEKMENU & ONDERSTE NAVIGATIEBALK
+   VIEW 3: WEEKMENU / MAALTIJDPLANNER
    ========================================================================== */
-
-/* 1. Ruimte vrijmaken voor de vaste navigatiebalk onderaan */
-body {
-  padding-bottom: 5.5rem; /* Zorgt dat de onderste knoppen nooit content overlappen */
+.meal-tabs {
+  display: flex;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
 }
 
-/* 2. Vaste navigatiebalk onderaan */
+.meal-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.6rem 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.meal-tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.meals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meal-day-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.15s ease;
+}
+
+.meal-day-card:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.meal-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.45rem;
+}
+
+.meal-day-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.meal-day-name.is-today {
+  color: var(--primary);
+}
+
+.meal-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  border-radius: 10px;
+  outline: none;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+}
+
+.meal-input:focus {
+  background: #ffffff;
+  border-color: var(--primary);
+}
+
+.meal-input::placeholder {
+  color: #94a3b8;
+  font-size: 0.88rem;
+}
+
+.meal-saved-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--success);
+  display: none;
+}
+
+/* ==========================================================================
+   ONDERSTE VASTE NAVIGATIEBALK
+   ========================================================================== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 480px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
   display: flex;
-  justify-content: space-around;
-  padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px)) 0;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 0.5rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px)) 1rem;
   z-index: 90;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .bottom-nav-btn {
+  flex: 1;
+  max-width: 160px;
   background: transparent;
   border: none;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0.35rem 1.5rem;
+  padding: 0.35rem 0.5rem;
   border-radius: 12px;
   transition: all 0.15s ease;
 }
@@ -1029,100 +674,162 @@ body {
   transform: scale(0.94);
 }
 
-/* 3. 3-Tab selector voor de kalenderweken */
-.meal-tabs {
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
   display: flex;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 0.25rem;
-  gap: 0.25rem;
-  margin-bottom: 1.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+  backdrop-filter: blur(4px);
 }
 
-.meal-tab-btn {
-  flex: 1;
-  background: transparent;
+.modal-box {
+  background: #ffffff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 380px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.modal-box h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.modal-box p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
   border: none;
-  padding: 0.55rem 0.2rem;
-  font-size: 0.82rem;
+}
+
+.btn-cancel {
+  background: var(--input-bg);
+  color: var(--text-main);
+}
+
+.btn-confirm-delete {
+  background: var(--danger);
+  color: #ffffff;
+}
+
+.form-field-group {
+  margin-bottom: 1rem;
+}
+
+.form-field-label {
+  display: block;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.form-field-input,
+.form-field-input-qty {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
   border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.95rem;
+  outline: none;
+  font-family: inherit;
 }
 
-.meal-tab-btn.active {
+.form-field-input:focus,
+.form-field-input-qty:focus {
+  border-color: var(--primary);
   background: #ffffff;
-  color: var(--primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.meal-tab-btn:active {
-  transform: scale(0.97);
+.qty-group {
+  max-width: 110px;
 }
 
-/* 4. Dag-kaarten in het weekmenu */
-.meals-list {
+/* Changelog popup styling */
+.changelog-box {
+  max-width: 420px;
+  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
 }
 
-.meal-day-card {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 0.75rem 0.9rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  transition: border-color 0.15s ease;
+.changelog-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.meal-day-card:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+.changelog-content {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 0.35rem;
+  margin-bottom: 1rem;
 }
 
-.meal-day-header {
+.changelog-entry {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.changelog-entry:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.changelog-entry-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.4rem;
 }
 
-.meal-day-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-main);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.meal-day-name.is-today {
+.changelog-badge {
+  background: rgba(79, 70, 229, 0.1);
   color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
 }
 
-.meal-input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 0.95rem;
+.changelog-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.changelog-entry ul {
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
   color: var(--text-main);
-  padding: 0.2rem 0;
-  font-family: inherit;
-}
-
-.meal-input::placeholder {
-  color: #94a3b8;
-  font-size: 0.88rem;
-}
-
-.meal-saved-pill {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #16a34a;
-  display: none;
+  line-height: 1.45;
 }
