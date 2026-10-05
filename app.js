@@ -9,6 +9,7 @@ import {
   addDoc,
   onSnapshot,
   doc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -54,13 +55,20 @@ try {
 }
 
 const listsCol = collection(db, "lists");
+const mealsCol = collection(db, "meals");
 
 const authView = document.getElementById("view-auth");
 const dashboardView = document.getElementById("view-dashboard");
 const detailView = document.getElementById("view-list-detail");
+const mealView = document.getElementById("view-mealplanner");
+const bottomNav = document.getElementById("bottom-nav");
 const pinInput = document.getElementById("auth-pin");
 const authError = document.getElementById("auth-error");
 
+const navBtnLists = document.getElementById("nav-btn-lists");
+const navBtnMeals = document.getElementById("nav-btn-meals");
+
+let currentTab = "lists"; // "lists" of "meals"
 let activeListId = null;
 let activeListName = "";
 let currentLists = [];
@@ -68,6 +76,7 @@ let currentItems = [];
 let unsubscribeLists = null;
 let unsubscribeItems = null;
 let unsubscribeActiveListDoc = null;
+let unsubscribeMeals = null;
 
 const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -79,6 +88,8 @@ onAuthStateChanged(auth, (user) => {
     authView.classList.remove("hidden");
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
+    mealView.classList.add("hidden");
+    bottomNav.classList.add("hidden");
   }
 });
 
@@ -97,18 +108,50 @@ document.getElementById("auth-form").addEventListener("submit", async (e) => {
   }
 });
 
-document.getElementById("btn-lock-app").addEventListener("click", async () => {
+async function handleLogout() {
   if (unsubscribeLists) unsubscribeLists();
   if (unsubscribeItems) unsubscribeItems();
   if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
+  if (unsubscribeMeals) unsubscribeMeals();
   await signOut(auth);
-});
+}
+
+document.getElementById("btn-lock-app").addEventListener("click", handleLogout);
+document.getElementById("btn-lock-app-meals").addEventListener("click", handleLogout);
 
 function unlockApp() {
   authView.classList.add("hidden");
-  dashboardView.classList.remove("hidden");
+  bottomNav.classList.remove("hidden");
+  switchTab("lists");
   startDashboardListener();
 }
+
+// Bottom navigation switching
+function switchTab(tab) {
+  currentTab = tab;
+  if (tab === "lists") {
+    navBtnLists.classList.add("active");
+    navBtnMeals.classList.remove("active");
+    mealView.classList.add("hidden");
+    if (activeListId) {
+      detailView.classList.remove("hidden");
+      dashboardView.classList.add("hidden");
+    } else {
+      dashboardView.classList.remove("hidden");
+      detailView.classList.add("hidden");
+    }
+  } else {
+    navBtnMeals.classList.add("active");
+    navBtnLists.classList.remove("active");
+    dashboardView.classList.add("hidden");
+    detailView.classList.add("hidden");
+    mealView.classList.remove("hidden");
+    initMealPlanner();
+  }
+}
+
+navBtnLists.addEventListener("click", () => switchTab("lists"));
+navBtnMeals.addEventListener("click", () => switchTab("meals"));
 
 function openList(listId, listName) {
   activeListId = listId;
@@ -116,6 +159,7 @@ function openList(listId, listName) {
   document.getElementById("active-list-title").textContent = listName;
 
   dashboardView.classList.add("hidden");
+  mealView.classList.add("hidden");
   detailView.classList.remove("hidden");
 
   history.pushState({ view: "detail" }, "");
@@ -128,7 +172,11 @@ function goBackToDashboard() {
   if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
   activeListId = null;
   detailView.classList.add("hidden");
-  dashboardView.classList.remove("hidden");
+  if (currentTab === "lists") {
+    dashboardView.classList.remove("hidden");
+  } else {
+    mealView.classList.remove("hidden");
+  }
   
   document.getElementById("confirm-modal").classList.add("hidden");
   document.getElementById("prompt-modal").classList.add("hidden");
@@ -699,5 +747,115 @@ document.getElementById("btn-close-changelog").addEventListener("click", () => {
 document.getElementById("btn-close-changelog-x").addEventListener("click", () => {
   changelogModalEl.classList.add("hidden");
 });
+
+// ==========================================
+// WEEKMENU / MEAL PLANNER LOGICA
+// ==========================================
+const DAYS_OF_WEEK = [
+  { id: "mon", name: "Maandag" },
+  { id: "tue", name: "Dinsdag" },
+  { id: "wed", name: "Woensdag" },
+  { id: "thu", name: "Donderdag" },
+  { id: "fri", name: "Vrijdag" },
+  { id: "sat", name: "Zaterdag" },
+  { id: "sun", name: "Zondag" }
+];
+
+let selectedWeekOffset = 0; // 0 = deze week, 1 = volgende week
+let currentMealsData = {};
+
+function getWeekKey(offsetWeeks = 0) {
+  const now = new Date();
+  now.setDate(now.getDate() + (offsetWeeks * 7));
+  
+  // ISO Week berekening
+  const target = new Date(now.valueOf());
+  const dayNr = (now.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1);
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+  }
+  const weekNum = 1 + Math.ceil((firstThursday - target) / 604800000);
+  return `${now.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+const tabThisWeek = document.getElementById("tab-this-week");
+const tabNextWeek = document.getElementById("tab-next-week");
+
+tabThisWeek.addEventListener("click", () => {
+  selectedWeekOffset = 0;
+  tabThisWeek.classList.add("active");
+  tabNextWeek.classList.remove("active");
+  listenToMeals();
+});
+
+tabNextWeek.addEventListener("click", () => {
+  selectedWeekOffset = 1;
+  tabNextWeek.classList.add("active");
+  tabThisWeek.classList.remove("active");
+  listenToMeals();
+});
+
+function initMealPlanner() {
+  listenToMeals();
+}
+
+function listenToMeals() {
+  if (unsubscribeMeals) unsubscribeMeals();
+  const weekKey = getWeekKey(selectedWeekOffset);
+  const mealsDocRef = doc(mealsCol, weekKey);
+
+  unsubscribeMeals = onSnapshot(mealsDocRef, (docSnap) => {
+    currentMealsData = docSnap.exists() ? docSnap.data() : {};
+    renderMealDays();
+  });
+}
+
+function renderMealDays() {
+  const container = document.getElementById("meals-container");
+  container.innerHTML = "";
+
+  const today = new Date();
+  const todayDayIndex = (today.getDay() + 6) % 7; // 0 = Maandag ... 6 = Zondag
+
+  DAYS_OF_WEEK.forEach((day, index) => {
+    const isToday = (selectedWeekOffset === 0 && index === todayDayIndex);
+    const card = document.createElement("div");
+    card.className = "meal-day-card";
+    
+    const mealText = currentMealsData[day.id] || "";
+
+    card.innerHTML = `
+      <div class="meal-day-header">
+        <span class="meal-day-name ${isToday ? 'is-today' : ''}">
+          ${day.name} ${isToday ? '• Vandaag' : ''}
+        </span>
+        <span id="saved-${day.id}" class="meal-saved-pill">Opgeslagen ✓</span>
+      </div>
+      <input type="text" class="meal-input" id="input-${day.id}" placeholder="Wat eten we?" value="${mealText}">
+    `;
+
+    const input = card.querySelector(`#input-${day.id}`);
+    const savedPill = card.querySelector(`#saved-${day.id}`);
+
+    input.addEventListener("blur", async () => {
+      const val = input.value.trim();
+      const weekKey = getWeekKey(selectedWeekOffset);
+      await setDoc(doc(mealsCol, weekKey), { [day.id]: val }, { merge: true });
+      savedPill.style.display = "inline";
+      setTimeout(() => { savedPill.style.display = "none"; }, 1800);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        input.blur();
+      }
+    });
+
+    container.appendChild(card);
+  });
+}
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(e => console.log(e));
