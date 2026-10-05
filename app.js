@@ -65,6 +65,7 @@ let currentItems = [];
 let unsubscribeLists = null;
 let unsubscribeItems = null;
 let unsubscribeActiveListDoc = null;
+let unsubscribeSubcounts = {};
 
 const SVG_EDIT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 const SVG_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
@@ -73,11 +74,33 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     unlockApp();
   } else {
+    stopAllListeners();
     authView.classList.remove("hidden");
     dashboardView.classList.add("hidden");
     detailView.classList.add("hidden");
   }
 });
+
+function stopAllListeners() {
+  if (unsubscribeLists) {
+    unsubscribeLists();
+    unsubscribeLists = null;
+  }
+  if (unsubscribeItems) {
+    unsubscribeItems();
+    unsubscribeItems = null;
+  }
+  if (unsubscribeActiveListDoc) {
+    unsubscribeActiveListDoc();
+    unsubscribeActiveListDoc = null;
+  }
+  Object.keys(unsubscribeSubcounts).forEach((id) => {
+    if (typeof unsubscribeSubcounts[id] === "function") {
+      unsubscribeSubcounts[id]();
+    }
+  });
+  unsubscribeSubcounts = {};
+}
 
 document.getElementById("auth-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -95,10 +118,12 @@ document.getElementById("auth-form").addEventListener("submit", async (e) => {
 });
 
 document.getElementById("btn-lock-app").addEventListener("click", async () => {
-  if (unsubscribeLists) unsubscribeLists();
-  if (unsubscribeItems) unsubscribeItems();
-  if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
-  await signOut(auth);
+  stopAllListeners();
+  try {
+    await signOut(auth);
+  } catch (err) {
+    console.warn("Fout bij uitloggen:", err);
+  }
 });
 
 function unlockApp() {
@@ -122,8 +147,14 @@ function openList(listId, listName) {
 }
 
 function goBackToDashboard() {
-  if (unsubscribeItems) unsubscribeItems();
-  if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
+  if (unsubscribeItems) {
+    unsubscribeItems();
+    unsubscribeItems = null;
+  }
+  if (unsubscribeActiveListDoc) {
+    unsubscribeActiveListDoc();
+    unsubscribeActiveListDoc = null;
+  }
   activeListId = null;
   detailView.classList.add("hidden");
   dashboardView.classList.remove("hidden");
@@ -195,22 +226,30 @@ function startDashboardListener() {
   const listsEmpty = document.getElementById("lists-empty");
   const qLists = query(listsCol);
 
-  unsubscribeLists = onSnapshot(qLists, (snapshot) => {
-    currentLists = [];
-    snapshot.forEach(docSnap => {
-      const d = docSnap.data();
-      currentLists.push({
-        id: docSnap.id,
-        ...d,
-        order: d.order ?? 9999
+  unsubscribeLists = onSnapshot(
+    qLists,
+    (snapshot) => {
+      currentLists = [];
+      snapshot.forEach(docSnap => {
+        const d = docSnap.data();
+        currentLists.push({
+          id: docSnap.id,
+          ...d,
+          order: d.order ?? 9999
+        });
       });
-    });
 
-    if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
-    else listsEmpty.classList.add("hidden");
+      if (currentLists.length === 0) listsEmpty.classList.remove("hidden");
+      else listsEmpty.classList.add("hidden");
 
-    renderDashboardLists();
-  });
+      renderDashboardLists();
+    },
+    (error) => {
+      if (error.code !== "permission-denied") {
+        console.error("Fout bij ophalen lijsten:", error);
+      }
+    }
+  );
 }
 
 function renderDashboardLists() {
@@ -244,17 +283,29 @@ function renderDashboardLists() {
       </div>
     `;
 
+    if (unsubscribeSubcounts[listId]) {
+      unsubscribeSubcounts[listId]();
+    }
+
     const itemsRef = collection(db, "lists", listId, "items");
-    onSnapshot(itemsRef, (itemSnap) => {
-      let openProducts = 0;
-      itemSnap.forEach(d => { if (!d.data().completed) openProducts++; });
-      const countEl = document.getElementById(`count-${listId}`);
-      if (countEl) {
-        if (itemSnap.empty) countEl.textContent = "Geen producten";
-        else if (openProducts === 0) countEl.textContent = "Alles gehaald! 🎉";
-        else countEl.textContent = `${openProducts} te halen`;
+    unsubscribeSubcounts[listId] = onSnapshot(
+      itemsRef,
+      (itemSnap) => {
+        let openProducts = 0;
+        itemSnap.forEach(d => { if (!d.data().completed) openProducts++; });
+        const countEl = document.getElementById(`count-${listId}`);
+        if (countEl) {
+          if (itemSnap.empty) countEl.textContent = "Geen producten";
+          else if (openProducts === 0) countEl.textContent = "Alles gehaald! 🎉";
+          else countEl.textContent = `${openProducts} te halen`;
+        }
+      },
+      (error) => {
+        if (error.code !== "permission-denied") {
+          console.error("Fout bij ophalen aantallen:", error);
+        }
       }
-    });
+    );
 
     li.addEventListener("click", () => openList(listId, data.name));
     li.addEventListener("contextmenu", (e) => e.preventDefault());
@@ -371,7 +422,10 @@ document.getElementById("add-list-form").addEventListener("submit", async (e) =>
 
 // Items & Producten
 function listenToItems(listId) {
-  if (unsubscribeItems) unsubscribeItems();
+  if (unsubscribeItems) {
+    unsubscribeItems();
+    unsubscribeItems = null;
+  }
 
   const itemsCol = collection(db, "lists", listId, "items");
   const qItems = query(itemsCol, orderBy("order", "asc"));
@@ -382,32 +436,40 @@ function listenToItems(listId) {
   const summaryToBuy = document.getElementById("summary-to-buy");
   const summaryInCart = document.getElementById("summary-in-cart");
 
-  unsubscribeItems = onSnapshot(qItems, (snapshot) => {
-    currentItems = [];
-    let totalProducts = 0, toBuyProducts = 0, inCartProducts = 0;
+  unsubscribeItems = onSnapshot(
+    qItems,
+    (snapshot) => {
+      currentItems = [];
+      let totalProducts = 0, toBuyProducts = 0, inCartProducts = 0;
 
-    snapshot.forEach(docSnap => {
-      const it = { id: docSnap.id, ...docSnap.data() };
-      it.qty = it.qty ?? 1;
-      currentItems.push(it);
-      totalProducts++;
-      if (it.completed) inCartProducts++; else toBuyProducts++;
-    });
+      snapshot.forEach(docSnap => {
+        const it = { id: docSnap.id, ...docSnap.data() };
+        it.qty = it.qty ?? 1;
+        currentItems.push(it);
+        totalProducts++;
+        if (it.completed) inCartProducts++; else toBuyProducts++;
+      });
 
-    clearBtn.disabled = currentItems.length === 0;
+      clearBtn.disabled = currentItems.length === 0;
 
-    if (currentItems.length === 0) {
-      itemsEmpty.classList.remove("hidden");
-      summaryCard.classList.add("hidden");
-    } else {
-      itemsEmpty.classList.add("hidden");
-      summaryCard.classList.remove("hidden");
-      summaryTotal.textContent = totalProducts;
-      summaryToBuy.textContent = toBuyProducts;
-      summaryInCart.textContent = inCartProducts;
+      if (currentItems.length === 0) {
+        itemsEmpty.classList.remove("hidden");
+        summaryCard.classList.add("hidden");
+      } else {
+        itemsEmpty.classList.add("hidden");
+        summaryCard.classList.remove("hidden");
+        summaryTotal.textContent = totalProducts;
+        summaryToBuy.textContent = toBuyProducts;
+        summaryInCart.textContent = inCartProducts;
+      }
+      renderItems();
+    },
+    (error) => {
+      if (error.code !== "permission-denied") {
+        console.error("Fout bij ophalen items:", error);
+      }
     }
-    renderItems();
-  });
+  );
 }
 
 // Opmerkingen
@@ -416,15 +478,26 @@ const saveNoteBtn = document.getElementById("btn-save-note");
 const noteSavedIndicator = document.getElementById("note-saved-indicator");
 
 function listenToActiveListDoc(listId) {
-  if (unsubscribeActiveListDoc) unsubscribeActiveListDoc();
+  if (unsubscribeActiveListDoc) {
+    unsubscribeActiveListDoc();
+    unsubscribeActiveListDoc = null;
+  }
 
-  unsubscribeActiveListDoc = onSnapshot(doc(db, "lists", listId), (docSnap) => {
-    if (!docSnap.exists()) return;
-    const data = docSnap.data();
-    if (document.activeElement !== noteInput) {
-      noteInput.value = data.note || "";
+  unsubscribeActiveListDoc = onSnapshot(
+    doc(db, "lists", listId),
+    (docSnap) => {
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+      if (document.activeElement !== noteInput) {
+        noteInput.value = data.note || "";
+      }
+    },
+    (error) => {
+      if (error.code !== "permission-denied") {
+        console.error("Fout bij ophalen notitie:", error);
+      }
     }
-  });
+  );
 }
 
 async function saveActiveListNote() {
