@@ -93,7 +93,6 @@ onAuthStateChanged(auth, (user) => {
     isInitialAuthCheck = false;
     unlockApp();
   } else {
-    // Voorkom dat Android bij het opstarten te vroeg naar het inlogscherm schiet
     if (isInitialAuthCheck) {
       isInitialAuthCheck = false;
     }
@@ -357,7 +356,7 @@ function renderDashboardLists() {
 
     li.querySelector(".btn-edit-card")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      openPromptModal("Lijstnaam aanpassen", data.name, null, async (newName) => {
+      openPromptModal("Lijstnaam aanpassen", data.name, null, false, async (newName) => {
         await updateDoc(doc(db, "lists", listId), { name: newName });
       });
     });
@@ -489,6 +488,7 @@ function listenToItems(listId) {
       snapshot.forEach(docSnap => {
         const it = { id: docSnap.id, ...docSnap.data() };
         it.qty = it.qty ?? 1;
+        it.onSale = it.onSale ?? false;
         currentItems.push(it);
         totalProducts++;
         if (it.completed) inCartProducts++; else toBuyProducts++;
@@ -589,6 +589,7 @@ function renderItems() {
       </button>
       <div class="item-content">
         <span class="item-name ${item.completed ? "done" : ""}">${item.name}</span>
+        ${item.onSale ? `<span class="item-deal-badge">🏷️ Actie</span>` : ''}
         ${(item.qty ?? 1) > 1 ? `<span class="item-qty-badge">${item.qty}x</span>` : ''}
       </div>
       <div class="item-actions">
@@ -609,8 +610,12 @@ function renderItems() {
 
     li.querySelector(".btn-item-edit")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      openPromptModal("Product aanpassen", item.name, item.qty ?? 1, async (newName, newQty) => {
-        await updateDoc(doc(db, "lists", activeListId, "items", item.id), { name: newName, qty: newQty });
+      openPromptModal("Product aanpassen", item.name, item.qty ?? 1, item.onSale || false, async (newName, newQty, onSale) => {
+        await updateDoc(doc(db, "lists", activeListId, "items", item.id), { 
+          name: newName, 
+          qty: newQty,
+          onSale: onSale 
+        });
       });
     });
 
@@ -716,7 +721,14 @@ document.getElementById("add-item-form")?.addEventListener("submit", async (e) =
   const name = inputEl ? inputEl.value.trim() : "";
   if (!name || !activeListId) return;
   const nextOrder = currentItems.length > 0 ? Math.max(...currentItems.map(i => i.order ?? 0)) + 1 : 1;
-  await addDoc(collection(db, "lists", activeListId, "items"), { name: name, qty: 1, completed: false, order: nextOrder, createdAt: serverTimestamp() });
+  await addDoc(collection(db, "lists", activeListId, "items"), { 
+    name: name, 
+    qty: 1, 
+    onSale: false,
+    completed: false, 
+    order: nextOrder, 
+    createdAt: serverTimestamp() 
+  });
   if (inputEl) inputEl.value = ""; 
   if (suggestionsEl) suggestionsEl.style.display = "none";
 });
@@ -747,25 +759,54 @@ document.getElementById("btn-modal-confirm")?.addEventListener("click", async ()
 const promptModalEl = document.getElementById("prompt-modal");
 const promptInput = document.getElementById("prompt-input");
 const promptQtyInput = document.getElementById("prompt-qty-input");
+const promptDealInput = document.getElementById("prompt-deal-input");
+const promptDealWrapper = document.getElementById("prompt-deal-wrapper");
 let onPromptCallback = null;
-function openPromptModal(title, currentName, currentQty, onSave) {
+
+function openPromptModal(title, currentName, currentQty, currentOnSale = false, onSave) {
   const t = document.getElementById("prompt-title");
   if (t) t.textContent = title;
   if (promptInput) promptInput.value = currentName;
+  
   const qtyWrapper = document.getElementById("prompt-qty-wrapper");
   if (qtyWrapper) {
-    if (currentQty !== null) { qtyWrapper.style.display = "block"; if (promptQtyInput) promptQtyInput.value = currentQty; } 
-    else qtyWrapper.style.display = "none";
+    if (currentQty !== null) { 
+      qtyWrapper.style.display = "block"; 
+      if (promptQtyInput) promptQtyInput.value = currentQty; 
+    } else {
+      qtyWrapper.style.display = "none";
+    }
   }
+
+  if (promptDealWrapper) {
+    if (currentQty !== null) {
+      promptDealWrapper.style.display = "block";
+      if (promptDealInput) promptDealInput.checked = !!currentOnSale;
+    } else {
+      promptDealWrapper.style.display = "none";
+    }
+  }
+
   onPromptCallback = onSave;
   promptModalEl?.classList.remove("hidden");
   setTimeout(() => { if (promptInput) { promptInput.focus(); promptInput.select(); } }, 50);
 }
-document.getElementById("btn-prompt-cancel")?.addEventListener("click", () => { promptModalEl?.classList.add("hidden"); onPromptCallback = null; });
+
+document.getElementById("btn-prompt-cancel")?.addEventListener("click", () => { 
+  promptModalEl?.classList.add("hidden"); 
+  onPromptCallback = null; 
+});
+
 document.getElementById("btn-prompt-confirm")?.addEventListener("click", async () => {
-  const val = promptInput ? promptInput.value.trim() : ""; if (!val) return;
+  const val = promptInput ? promptInput.value.trim() : ""; 
+  if (!val) return;
   promptModalEl?.classList.add("hidden");
-  if (onPromptCallback) await onPromptCallback(val, promptQtyInput ? (parseInt(promptQtyInput.value, 10) || 1) : 1);
+  
+  if (onPromptCallback) {
+    const qty = promptQtyInput ? (parseInt(promptQtyInput.value, 10) || 1) : 1;
+    const onSale = promptDealInput ? promptDealInput.checked : false;
+    await onPromptCallback(val, qty, onSale);
+  }
   onPromptCallback = null;
 });
 
