@@ -526,18 +526,50 @@ h1 {
   cursor: not-allowed;
 }
 
+/* ==========================================================================
+   CHANGELOG LINK & BADGE (GELIJK AAN VERLANGLIJSTJES)
+   ========================================================================== */
 .dashboard-footer {
-  margin-top: 2rem;
+  margin-top: 1.25rem;
+  padding-top: 0.25rem;
   text-align: center;
+}
+
+.footer-divider {
+  border: none;
+  border-top: 1px solid #f1f5f9; /* Subtiele, lichte scheidingslijn */
+  margin-bottom: 0.75rem;
+  width: 100%;
 }
 
 .changelog-link {
   background: transparent;
   border: none;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  text-decoration: underline;
+  color: #4f46e5; /* De actieve paars/blauwe tekstkleur */
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none; /* Geen onderstreping meer */
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem; /* Ruimte tussen de tekst en de badge */
+  transition: opacity 0.15s ease;
+}
+
+.changelog-link:active {
+  opacity: 0.8;
+}
+
+/* De kleine paars/blauwe versie-badge */
+.version-badge {
+  background: #eef2ff; /* Heel licht paars/blauw */
+  color: #4338ca;      /* Iets donkerder paars/blauw voor goed contrast */
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 8px; /* Mooi afgerond */
+  display: inline-block;
 }
 
 /* ==========================================================================
