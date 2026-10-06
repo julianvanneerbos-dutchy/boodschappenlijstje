@@ -1,19 +1,54 @@
 /* ==========================================================================
-   BASIS VARIABELEN & THEMA
+   BASIS VARIABELEN & THEMA (LICHT)
    ========================================================================== */
 :root {
   --primary: #4f46e5;
   --primary-hover: #4338ca;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  --bg: #e2e8f0;               /* De zachtgrijze achtergrond van de hele body */
+  --surface: #ffffff;          /* De witte kaart/container */
+  --text-main: #0f172a;        /* Diepe, donkere tekst */
+  --text-muted: #64748b;      /* Grijzere, secundaire tekst */
+  --border: #e2e8f0;           /* Randen en scheidingen */
   --danger: #ef4444;
   --danger-hover: #dc2626;
   --success: #22c55e;
-  --card-bg: #ffffff;
-  --input-bg: #f1f5f9;
+  --card-bg: #ffffff;          /* Achtergrond van lijst- & productkaarten */
+  --input-bg: #f1f5f9;         /* Invoervelden en lichte knoppen */
+  --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+  
+  /* Badges & Overlays */
+  --badge-deal-bg: #ffedd5;
+  --badge-deal-color: #ea580c;
+  --badge-deal-border: #fed7aa;
+  
+  --badge-version-bg: #eef2ff;
+  --badge-version-color: #4338ca;
+
+  --modal-overlay: rgba(15, 23, 42, 0.5);
+}
+
+/* ==========================================================================
+   DONKERE MODUS (DARK THEME) OVERRIDES
+   ========================================================================== */
+html[data-dark="true"] {
+  --bg: #0f172a;               /* Donkerblauw/zwart voor de achtergrond */
+  --surface: #1e293b;          /* Iets lichtere container in donkere modus */
+  --text-main: #f1f5f9;        /* Zacht wit voor hoofdteksten */
+  --text-muted: #94a3b8;       /* Gematigd grijs voor secundaire tekst */
+  --border: #334155;           /* Donkere randen */
+  --card-bg: #0f172a;          /* Donkerdere kaarten binnen de container */
+  --input-bg: #1e293b;         /* Invoervelden vallen donker weg */
+  --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 1px 1px rgba(255, 255, 255, 0.03);
+
+  /* Aangepaste badges voor donker contrast */
+  --badge-deal-bg: rgba(234, 88, 12, 0.15);
+  --badge-deal-color: #f97316;
+  --badge-deal-border: rgba(249, 115, 22, 0.3);
+
+  --badge-version-bg: rgba(79, 70, 229, 0.15);
+  --badge-version-color: #818cf8;
+
+  --modal-overlay: rgba(15, 23, 42, 0.75);
 }
 
 * {
@@ -29,12 +64,13 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: #e2e8f0;
+  background-color: var(--bg);
   color: var(--text-main);
   margin: 0;
   padding: 0.5rem 0.5rem 5rem 0.5rem;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ==========================================================================
@@ -46,8 +82,9 @@ body {
   margin: 0 auto;
   background: var(--surface);
   border-radius: 20px;
-  padding: 1rem 0.85rem 1rem 0.85rem;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+  padding: 1rem 0.85rem;
+  box-shadow: var(--shadow);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 header {
@@ -55,6 +92,12 @@ header {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 h1 {
@@ -65,6 +108,84 @@ h1 {
 
 .hidden {
   display: none !important;
+}
+
+/* ==========================================================================
+   THEMA DROPDOWN & MAANTJE
+   ========================================================================== */
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-icon-round {
+  background: var(--input-bg);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-icon-round:active {
+  background: var(--border);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 155px;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.dropdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background-color 0.1s ease;
+}
+
+.dropdown-item:active {
+  background: var(--input-bg);
+}
+
+.dropdown-item-text {
+  flex-shrink: 0;
+}
+
+.dropdown-check {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 0.85rem;
+  opacity: 0;
+}
+
+.dropdown-item.active .dropdown-check {
+  opacity: 1;
 }
 
 /* ==========================================================================
@@ -120,12 +241,13 @@ h1 {
   padding: 0.65rem 0.85rem;
   font-size: 0.95rem;
   outline: none;
+  color: var(--text-main);
   font-family: inherit;
 }
 
 .input-row input:focus {
   border-color: var(--primary);
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .input-wrapper {
@@ -176,13 +298,14 @@ h1 {
   border-radius: 14px;
   border: 2px solid var(--border);
   background: var(--input-bg);
+  color: var(--text-main);
   outline: none;
   margin-bottom: 1rem;
 }
 
 .auth-pin-input:focus {
   border-color: var(--primary);
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .auth-submit-btn {
@@ -210,7 +333,7 @@ h1 {
 }
 
 .list-card {
-  background: #ffffff;
+  background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.85rem 1rem;
@@ -218,7 +341,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
   user-select: none;
 }
 
@@ -269,7 +392,7 @@ h1 {
 }
 
 .item-row {
-  background: #ffffff;
+  background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.65rem 0.85rem;
@@ -344,9 +467,9 @@ h1 {
 
 /* Aanbieding / Actie badge */
 .item-deal-badge {
-  background: #ffedd5;
-  color: #ea580c;
-  border: 1px solid #fed7aa;
+  background: var(--badge-deal-bg);
+  color: var(--badge-deal-color);
+  border: 1px solid var(--badge-deal-border);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -379,11 +502,11 @@ h1 {
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   list-style: none;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 50;
   display: none;
   overflow: hidden;
@@ -393,7 +516,7 @@ h1 {
   padding: 0.65rem 0.85rem;
   font-size: 0.9rem;
   cursor: pointer;
-  border-bottom: 1px solid var(--input-bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .suggestions-list li:last-child {
@@ -448,7 +571,7 @@ h1 {
 }
 
 .note-card {
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.85rem 1rem;
@@ -537,7 +660,7 @@ h1 {
 
 .footer-divider {
   border: none;
-  border-top: 1px solid #f1f5f9; /* Subtiele, lichte scheidingslijn */
+  border-top: 1px solid var(--border);
   margin-bottom: 0.75rem;
   width: 100%;
 }
@@ -545,15 +668,15 @@ h1 {
 .changelog-link {
   background: transparent;
   border: none;
-  color: #4f46e5; /* De actieve paars/blauwe tekstkleur */
+  color: var(--primary);
   font-size: 0.82rem;
   font-weight: 600;
-  text-decoration: none; /* Geen onderstreping meer */
+  text-decoration: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem; /* Ruimte tussen de tekst en de badge */
+  gap: 0.4rem;
   transition: opacity 0.15s ease;
 }
 
@@ -561,19 +684,18 @@ h1 {
   opacity: 0.8;
 }
 
-/* De kleine paars/blauwe versie-badge */
 .version-badge {
-  background: #eef2ff; /* Heel licht paars/blauw */
-  color: #4338ca;      /* Iets donkerder paars/blauw voor goed contrast */
+  background: var(--badge-version-bg);
+  color: var(--badge-version-color);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 0.15rem 0.45rem;
-  border-radius: 8px; /* Mooi afgerond */
+  border-radius: 8px;
   display: inline-block;
 }
 
 /* ==========================================================================
-   VIEW 3: WEEKMENU / MAALTIJDPLANNER (DUIDELIJK & PAST IN 1 BEELD)
+   VIEW 3: WEEKMENU / MAALTIJDPLANNER
    ========================================================================== */
 #view-mealplanner {
   padding-bottom: 0.25rem;
@@ -604,7 +726,7 @@ h1 {
 }
 
 .meal-tab-btn.active {
-  background: #ffffff;
+  background: var(--surface);
   color: var(--primary);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
@@ -616,11 +738,11 @@ h1 {
 }
 
 .meal-day-card {
-  background: #ffffff;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.45rem 0.8rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -664,7 +786,8 @@ h1 {
 }
 
 .meal-input::placeholder {
-  color: #94a3b8;
+  color: var(--text-muted);
+  opacity: 0.6;
   font-size: 0.95rem;
   font-weight: 400;
 }
@@ -685,14 +808,14 @@ h1 {
   left: 0;
   right: 0;
   width: 100vw;
-  background: #ffffff;
+  background: var(--surface);
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: space-around;
   align-items: center;
   padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) 1rem;
   z-index: 999;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .bottom-nav-btn {
@@ -736,17 +859,18 @@ h1 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   z-index: 1000;
   backdrop-filter: blur(4px);
+  transition: background-color 0.2s ease;
 }
 
 .modal-box {
-  background: #ffffff;
+  background: var(--surface);
   border-radius: 18px;
   width: 100%;
   max-width: 380px;
@@ -809,6 +933,7 @@ h1 {
   width: 100%;
   border: 1px solid var(--border);
   background: var(--input-bg);
+  color: var(--text-main);
   border-radius: 10px;
   padding: 0.6rem 0.85rem;
   font-size: 0.95rem;
@@ -819,7 +944,7 @@ h1 {
 .form-field-input:focus,
 .form-field-input-qty:focus {
   border-color: var(--primary);
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .qty-group {
@@ -867,8 +992,8 @@ h1 {
 }
 
 .changelog-badge {
-  background: rgba(79, 70, 229, 0.1);
-  color: var(--primary);
+  background: var(--badge-version-bg);
+  color: var(--badge-version-color);
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.2rem 0.5rem;
