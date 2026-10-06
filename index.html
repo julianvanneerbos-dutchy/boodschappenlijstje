@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4f46e5">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <div class="container">
@@ -27,10 +27,31 @@
     <div id="view-dashboard" class="hidden">
       <header>
         <h1>Mijn Lijstjes</h1>
-        <button id="btn-lock-app" class="btn-icon" title="Vergrendel app">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-          <span>Uitloggen</span>
-        </button>
+        <div class="header-actions">
+          <!-- Weergave / Dark Mode Dropdown -->
+          <div class="dropdown-wrapper">
+            <button id="btn-theme-toggle" class="btn-icon-round" title="Weergave aanpassen">🌙</button>
+            <div id="theme-dropdown" class="dropdown-menu hidden">
+              <button type="button" class="dropdown-item" data-theme="auto">
+                <span class="dropdown-item-text">⚙️ Automatisch</span>
+                <span class="dropdown-check">✓</span>
+              </button>
+              <button type="button" class="dropdown-item" data-theme="light">
+                <span class="dropdown-item-text">☀️ Licht</span>
+                <span class="dropdown-check">✓</span>
+              </button>
+              <button type="button" class="dropdown-item" data-theme="dark">
+                <span class="dropdown-item-text">🌙 Donker</span>
+                <span class="dropdown-check">✓</span>
+              </button>
+            </div>
+          </div>
+          
+          <button id="btn-lock-app" class="btn-icon" title="Vergrendel app">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Uitloggen</span>
+          </button>
+        </div>
       </header>
 
       <form id="add-list-form" class="input-row">
@@ -189,6 +210,6 @@
     </div>
   </div>
 
-  <script type="module" src="app.js?v=7"></script>
+  <script type="module" src="app.js?v=8"></script>
 </body>
 </html>
