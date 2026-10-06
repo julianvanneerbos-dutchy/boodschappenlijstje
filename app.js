@@ -813,31 +813,31 @@ document.getElementById("btn-prompt-confirm")?.addEventListener("click", async (
 // Changelog
 const changelogModalEl = document.getElementById("changelog-modal");
 const changelogListEl = document.getElementById("changelog-list");
-const changelogVersionEl = document.getElementById("changelog-latest-version");
 
 let cachedChangelogEntries = null;
 
 async function fetchChangelog() {
   if (cachedChangelogEntries) return cachedChangelogEntries;
   try {
-    const res = await fetch('changelog.json?v=' + Date.now());
-    if (!res.ok) throw new Error("Changelog kon niet worden geladen");
+    const res = await fetch('./changelog.json?v=' + Date.now());
+    if (!res.ok) throw new Error("Status " + res.status);
     cachedChangelogEntries = await res.json();
     return cachedChangelogEntries;
   } catch (err) {
-    console.warn("Changelog laden mislukt:", err);
+    console.warn("Changelog ophalen mislukt:", err);
     return null;
   }
 }
 
-// Haal direct bij opstarten de nieuwste versie op voor het linkje
-async function initChangelogBadge() {
+async function updateChangelogBadge() {
+  const versionEl = document.getElementById("changelog-latest-version");
   const entries = await fetchChangelog();
-  if (entries && entries.length > 0 && changelogVersionEl) {
-    changelogVersionEl.textContent = `(${entries[0].version})`;
+  if (entries && entries.length > 0 && versionEl) {
+    versionEl.textContent = entries[0].version;
   }
 }
-initChangelogBadge();
+
+updateChangelogBadge();
 
 async function loadChangelog() {
   if (!changelogListEl) return;
@@ -876,6 +876,76 @@ document.getElementById("btn-close-changelog")?.addEventListener("click", () => 
 document.getElementById("btn-close-changelog-x")?.addEventListener("click", () => {
   changelogModalEl?.classList.add("hidden");
 });
+
+// ==========================================
+// THEMA / WEERGAVE LOGICA (DARK & LIGHT)
+// ==========================================
+let activeThemeMode = localStorage.getItem("boodschappen-theme") || "auto"; // "auto", "light", "dark"
+
+const btnThemeToggle = document.getElementById("btn-theme-toggle");
+const themeDropdown = document.getElementById("theme-dropdown");
+const mediaQueryDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+function applyTheme() {
+  const htmlEl = document.documentElement;
+  let isDark = false;
+
+  if (activeThemeMode === "dark") {
+    isDark = true;
+  } else if (activeThemeMode === "light") {
+    isDark = false;
+  } else {
+    // "auto": Volg de mediaquery van de telefoon live
+    isDark = mediaQueryDark.matches;
+  }
+
+  // Zet de data-dark status op de html (waardoor de CSS kleurt)
+  htmlEl.setAttribute("data-dark", isDark ? "true" : "false");
+
+  // Vinkjes in dropdown bijwerken
+  document.querySelectorAll("#theme-dropdown .dropdown-item").forEach(btn => {
+    if (btn.getAttribute("data-theme") === activeThemeMode) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+}
+
+// Sluit dropdown bij klikken buiten het element
+document.addEventListener("click", (e) => {
+  if (themeDropdown && btnThemeToggle && !themeDropdown.contains(e.target) && !btnThemeToggle.contains(e.target)) {
+    themeDropdown.classList.add("hidden");
+  }
+});
+
+btnThemeToggle?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  themeDropdown?.classList.toggle("hidden");
+});
+
+document.querySelectorAll("#theme-dropdown .dropdown-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const targetMode = btn.getAttribute("data-theme");
+    if (!targetMode) return;
+    
+    activeThemeMode = targetMode;
+    localStorage.setItem("boodschappen-theme", targetMode);
+    
+    applyTheme();
+    themeDropdown?.classList.add("hidden");
+  });
+});
+
+// Luister live naar systeemveranderingen (overgang dag/nacht)
+mediaQueryDark.addEventListener("change", () => {
+  if (activeThemeMode === "auto") {
+    applyTheme();
+  }
+});
+
+// Pas het thema direct bij opstarten toe
+applyTheme();
 
 // ==========================================
 // WEEKMENU LOGICA
