@@ -1,8 +1,9 @@
 [
   {
-    "version": "v1.6",
+"version": "v1.6.1",
     "date": "Oktober 2026",
     "changes": [
+      "Stijl van de changelog-link vernieuwd en gelijkgetrokken met de verlanglijstjes-app, inclusief een schone badge-weergave.",
       "Aanbiedingen markeren: geef via het bewerkmenu aan of een product in de aanbieding/bonus is en herken het direct aan de oranje 'Actie' badge.",
       "Geoptimaliseerd weekmenu: alle 7 dagen passen nu perfect in één oogopslag op je scherm zonder te hoeven scrollen.",
       "Tekstgrootte gerechten verbeterd: grotere en duidelijkere weergave van maaltijden en dagen.",
