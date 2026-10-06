@@ -342,6 +342,30 @@ h1 {
   border-radius: 6px;
 }
 
+/* Aanbieding / Actie badge */
+.item-deal-badge {
+  background: #ffedd5;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.item-row.is-done .item-deal-badge {
+  opacity: 0.5;
+  background: var(--input-bg);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
 .empty-state {
   text-align: center;
   color: var(--text-muted);
@@ -583,7 +607,7 @@ h1 {
 }
 
 .meal-day-name {
-  font-size: 0.82rem; /* Iets groter en duidelijk leesbaar */
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -600,7 +624,7 @@ h1 {
   background: transparent;
   border-radius: 0;
   outline: none;
-  font-size: 1.05rem; /* Goed leesbare, grotere letters voor gerechten */
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--text-main);
   padding: 0.15rem 0;
