@@ -813,33 +813,57 @@ document.getElementById("btn-prompt-confirm")?.addEventListener("click", async (
 // Changelog
 const changelogModalEl = document.getElementById("changelog-modal");
 const changelogListEl = document.getElementById("changelog-list");
+const changelogVersionEl = document.getElementById("changelog-latest-version");
+
+let cachedChangelogEntries = null;
+
+async function fetchChangelog() {
+  if (cachedChangelogEntries) return cachedChangelogEntries;
+  try {
+    const res = await fetch('changelog.json?v=' + Date.now());
+    if (!res.ok) throw new Error("Changelog kon niet worden geladen");
+    cachedChangelogEntries = await res.json();
+    return cachedChangelogEntries;
+  } catch (err) {
+    console.warn("Changelog laden mislukt:", err);
+    return null;
+  }
+}
+
+// Haal direct bij opstarten de nieuwste versie op voor het linkje
+async function initChangelogBadge() {
+  const entries = await fetchChangelog();
+  if (entries && entries.length > 0 && changelogVersionEl) {
+    changelogVersionEl.textContent = `(${entries[0].version})`;
+  }
+}
+initChangelogBadge();
 
 async function loadChangelog() {
   if (!changelogListEl) return;
   changelogListEl.innerHTML = `<div class="changelog-loading">Laden...</div>`;
-  try {
-    const res = await fetch('changelog.json?v=' + Date.now());
-    if (!res.ok) throw new Error("Changelog kon niet worden geladen");
-    const entries = await res.json();
-    
-    changelogListEl.innerHTML = "";
-    entries.forEach(entry => {
-      const div = document.createElement("div");
-      div.className = "changelog-entry";
-      div.innerHTML = `
-        <div class="changelog-entry-header">
-          <span class="changelog-badge">${entry.version}</span>
-          <span class="changelog-date">${entry.date}</span>
-        </div>
-        <ul>
-          ${entry.changes.map(ch => `<li>${ch}</li>`).join("")}
-        </ul>
-      `;
-      changelogListEl.appendChild(div);
-    });
-  } catch (err) {
+  
+  const entries = await fetchChangelog();
+  if (!entries) {
     changelogListEl.innerHTML = `<div style="text-align: center; color: var(--danger); padding: 1rem; font-size: 0.85rem;">Kon de changelog niet laden. Controleer of changelog.json bestaat op GitHub.</div>`;
+    return;
   }
+  
+  changelogListEl.innerHTML = "";
+  entries.forEach(entry => {
+    const div = document.createElement("div");
+    div.className = "changelog-entry";
+    div.innerHTML = `
+      <div class="changelog-entry-header">
+        <span class="changelog-badge">${entry.version}</span>
+        <span class="changelog-date">${entry.date}</span>
+      </div>
+      <ul>
+        ${entry.changes.map(ch => `<li>${ch}</li>`).join("")}
+      </ul>
+    `;
+    changelogListEl.appendChild(div);
+  });
 }
 
 document.getElementById("btn-open-changelog")?.addEventListener("click", () => {
