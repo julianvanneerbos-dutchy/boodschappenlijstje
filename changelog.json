@@ -1,49 +1,40 @@
 [
   {
-    "version": "v1.5.1",
+    "version": "v1.6",
     "date": "Oktober 2026",
     "changes": [
-      "Verbeterde inlogsessie op Android: je blijft nu permanent ingelogd en hoeft de pincode niet steeds opnieuw in te vullen.",
-      "Nieuwe functie: 'Wat eten we?' weekmenu toegevoegd met handige navigatiebalk onderaan.",
-      "Blader eenvoudig tussen 'Vorige week', 'Deze week' en 'Volgende week'.",
-      "Handige 'Kopieer ↷' knop om favoriete gerechten van vorige week direct over te nemen naar deze week.",
-      "Volledig automatisch gesynchroniseerd via de cloud, inclusief 'Vandaag'-indicator."
+      "Aanbiedingen markeren: geef via het bewerkmenu aan of een product in de aanbieding/bonus is en herken het direct aan de oranje 'Actie' badge.",
+      "Geoptimaliseerd weekmenu: alle 7 dagen passen nu perfect in één oogopslag op je scherm zonder te hoeven scrollen.",
+      "Tekstgrootte gerechten verbeterd: grotere en duidelijkere weergave van maaltijden en dagen.",
+      "Permanente login op Android: Token Service API ingeschakeld waardoor inlogsessies op de achtergrond stil verversen en je niet meer uitgelogd raakt.",
+      "Dynamische versieweergave: het nieuwste versienummer wordt nu automatisch getoond bij de changelog-link op het dashboard."
     ]
   },
   {
-    "version": "v1.4.1",
+    "version": "v1.5",
     "date": "Oktober 2026",
     "changes": [
-      "De 'Wat is er nieuw?' link is verplaatst naar de onderkant van het dashboard voor een rustigere header.",
-      "Onder de motorkap: De app is technisch volledig vernieuwd. De code is nu netjes opgesplitst in losse bestanden (HTML, CSS, JS). Dit zorgt voor snellere updates in de toekomst en een betere score op GitHub."
+      "Nieuw tabblad Weekmenu / Maaltijdplanner toegevoegd.",
+      "Gerechten plannen per weekdag met automatische synchronisatie.",
+      "Mogelijkheid om maaltijden van vorige week met één tik te kopiëren."
     ]
   },
   {
-    "version": "v1.4.0",
-    "date": "Oktober 2026",
+    "version": "v1.4",
+    "date": "September 2026",
     "changes": [
-      "Changelog toegevoegd aan het dashboard.",
-      "Opmerkingen per lijstje kunnen toevoegen onderaan het scherm.",
-      "Google Analytics 4 geïntegreerd voor websitestatistieken."
+      "Aantallen per product instelbaar gemaakt (bijv. 2x, 3x).",
+      "Persoonlijke opmerkingen/notities per boodschappenlijst toegevoegd.",
+      "Drag-and-drop ondersteuning verfijnd voor mobiele apparaten."
     ]
   },
   {
-    "version": "v1.3.0",
-    "date": "Oktober 2026",
+    "version": "v1.0",
+    "date": "September 2026",
     "changes": [
-      "Volgorde van lijstjes op het dashboard aanpassen via slepen (zowel mobiel als desktop).",
-      "Strakkere, compacte weergave met minder witruimte.",
-      "Emoji-iconen vervangen door moderne vectoriconen.",
-      "Knoppen verduidelijkt ('Uitloggen' en 'Lijst leegmaken')."
-    ]
-  },
-  {
-    "version": "v1.2.0",
-    "date": "Oktober 2026",
-    "changes": [
-      "Overschakeling naar Firebase Authentication met pincode.",
-      "Firestore Security Rules ingesteld voor waterdichte beveiliging.",
-      "API-sleutel restricties geconfigureerd in Google Cloud."
+      "Eerste release van het gezamenlijke boodschappenlijstje.",
+      "Realtime synchronisatie via Firebase Firestore.",
+      "PWA ondersteuning voor installatie op het startscherm."
     ]
   }
 ]
