@@ -1,18 +1,19 @@
 [
   {
-"version": "v1.6.1",
+    "version": "v1.7.0",
     "date": "Oktober 2026",
     "changes": [
-      "Stijl van de changelog-link vernieuwd en gelijkgetrokken met de verlanglijstjes-app, inclusief een schone badge-weergave.",
+      "Nieuw: Volwaardige Donkere Modus! Pas de weergave aan naar jouw voorkeur via het maantje (🌙) rechtsboven.",
+      "Kies uit: ⚙️ Automatisch (volgt je telefoon), ☀️ Altijd licht, of 🌙 Altijd donker. De app onthoudt jouw keuze.",
+      "Changelog-link vernieuwd: de stijl is nu gelijkgetrokken met de verlanglijstjes-app, inclusief een schone, nieuwe badge-weergave.",
       "Aanbiedingen markeren: geef via het bewerkmenu aan of een product in de aanbieding/bonus is en herken het direct aan de oranje 'Actie' badge.",
       "Geoptimaliseerd weekmenu: alle 7 dagen passen nu perfect in één oogopslag op je scherm zonder te hoeven scrollen.",
       "Tekstgrootte gerechten verbeterd: grotere en duidelijkere weergave van maaltijden en dagen.",
-      "Permanente login op Android: Token Service API ingeschakeld waardoor inlogsessies op de achtergrond stil verversen en je niet meer uitgelogd raakt.",
-      "Dynamische versieweergave: het nieuwste versienummer wordt nu automatisch getoond bij de changelog-link op het dashboard."
+      "Permanente login op Android: Token Service API ingeschakeld waardoor inlogsessies op de achtergrond stil verversen en je niet meer uitgelogd raakt."
     ]
   },
   {
-    "version": "v1.5",
+    "version": "v1.5.0",
     "date": "Oktober 2026",
     "changes": [
       "Nieuw tabblad Weekmenu / Maaltijdplanner toegevoegd.",
@@ -21,7 +22,7 @@
     ]
   },
   {
-    "version": "v1.4",
+    "version": "v1.4.0",
     "date": "September 2026",
     "changes": [
       "Aantallen per product instelbaar gemaakt (bijv. 2x, 3x).",
@@ -30,7 +31,7 @@
     ]
   },
   {
-    "version": "v1.0",
+    "version": "v1.0.0",
     "date": "September 2026",
     "changes": [
       "Eerste release van het gezamenlijke boodschappenlijstje.",
